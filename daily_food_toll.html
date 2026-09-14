@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.0.1</title>
+    <title>智能饮食规划器 V3.0.3</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -35,8 +35,8 @@
         .row-middle .card .card-body { flex: 1; display: flex; flex-direction: column; min-height: var(--module-height); }
         .row-bottom { display: flex; gap: 12px; }
         .row-bottom .card { min-width: 0; }
-        .row-bottom .card-left { flex: 3; }
-        .row-bottom .card-right { flex: 2; }
+        .row-bottom .card-left { flex: 2; }
+        .row-bottom .card-right { flex: 1; min-width: 280px; }
 
         .card { background: var(--card); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow); }
         .card-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; color: var(--text); flex-shrink: 0; flex-wrap: wrap; }
@@ -619,7 +619,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.0.1</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.0.3</div>
 
 <script>
     // ============================================================
@@ -2530,9 +2530,11 @@
                     updateMealTitle(date);
                     renderMeals();
                     renderAdvice();
-                    // 隐藏日期选择器，显示回到今日
-                    document.getElementById('mealDatePicker').style.display = 'none';
-                    document.getElementById('backToTodayBtn').style.display = '';
+                    // 只有选中的不是今天时，才隐藏日期选择器并显示回到今日
+                    if (date !== getToday()) {
+                        document.getElementById('mealDatePicker').style.display = 'none';
+                        document.getElementById('backToTodayBtn').style.display = '';
+                    }
                 }
             });
         });
@@ -3284,7 +3286,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.0.1 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.0.3 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3294,7 +3296,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.0.1 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.0.3 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3397,7 +3399,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.0.1 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.0.3 事件绑定完成');
     }
 
     // 全局错误捕获
