@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.1.0</title>
+    <title>智能饮食规划器 V3.1.1</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -619,7 +619,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.1.0</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.1.1</div>
 
 <script>
     // ============================================================
@@ -2488,7 +2488,7 @@
             const avgProtein = count > 0 ? Math.round(totalProtein / count) : 0;
             const avgCarbs = count > 0 ? Math.round(totalCarbs / count) : 0;
             const avgFat = count > 0 ? Math.round(totalFat / count) : 0;
-            html += `<tr style="font-weight:600;background:#F3F4F6;"><td>📊 平均</td><td>${avgCal}</td><td>-</td><td>-</td><td>${avgCarbs}</td><td>${avgProtein}</td><td>${avgFat}</td></tr>`;
+            html += `<tr style="font-weight:600;background:#F3F4F6;"><td>📊 平均</td><td></td><td>${avgCal}</td><td>-</td><td>-</td><td>${avgCarbs}</td><td>${avgProtein}</td><td>${avgFat}</td></tr>`;
         } else { html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>'; }
         tbody.innerHTML = html;
 
@@ -3287,7 +3287,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.1.0 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.1.1 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3297,7 +3297,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.1.0 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.1.1 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3400,7 +3400,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.1.0 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.1.1 事件绑定完成');
     }
 
     // 全局错误捕获
