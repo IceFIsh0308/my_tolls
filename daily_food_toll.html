@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.5</title>
+    <title>智能饮食规划器 V3.3.7</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -115,10 +115,10 @@
         .ring-item .ring-pct.under { color: var(--primary); }
         /* === 营养来源浮窗 === */
         .nutrient-source-popup {
-            position: absolute; top: -4px; left: 0; right: 0; bottom: 0;
+            position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-            z-index: 100; display: none; flex-direction: row; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-            overflow: hidden;
+            display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            overflow: hidden; margin-top: 6px;
         }
         .nutrient-source-popup.active { display: flex; }
         .nsp-title-col { display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: upright; font-size: 12px; font-weight: 600; padding: 4px 6px; background: var(--bg); border-right: 1px solid var(--border); flex-shrink: 0; }
@@ -127,7 +127,10 @@
         .nsp-row:last-child { border-bottom: none; }
         .nsp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .nsp-val { font-weight: 600; margin-left: 6px; white-space: nowrap; }
-        .nsp-close { position: absolute; top: 2px; right: 4px; cursor: pointer; font-size: 12px; color: var(--text-secondary); z-index: 1; }
+        .nsp-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+        .nsp-grow { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; font-size: 11px; min-width: 0; }
+        .nsp-grow .nsp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .nsp-grow .nsp-val { font-weight: 600; margin-left: 6px; white-space: nowrap; }
 
         .meal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; flex: 1; min-height: 0; margin-bottom: 8px; }
         .meal-col { display: flex; flex-direction: column; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: visible; background: var(--bg); min-height: 0; min-width: 0; position: relative; }
@@ -671,7 +674,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.5</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.7</div>
 
 <script>
     // ============================================================
@@ -1798,37 +1801,42 @@
 
     function bindNutrientSourcePopup(container) {
         const items = container.querySelectorAll('.ring-item[data-nutrient]');
-        // 移除旧浮窗
-        const oldPopup = container.querySelector('.nutrient-source-popup');
-        if (oldPopup) oldPopup.remove();
         items.forEach(function(item) {
             item.style.cursor = 'pointer';
-            item.addEventListener('mouseenter', function() {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
                 const nutrientKey = this.dataset.nutrient;
                 const label = this.dataset.label;
                 const sources = getNutrientSourceData(nutrientKey);
-                if (sources.length === 0) return;
-                // 移除其他浮窗
-                container.querySelectorAll('.nutrient-source-popup').forEach(function(p) { p.remove(); });
+                if (sources.length === 0) { showToast('该营养素暂无来源'); return; }
+                // 若已显示则关闭（再点一次）
+                const wrap = container.querySelector('.intake-ring-wrap');
+                const existing = wrap.querySelector('.nutrient-source-popup');
+                if (existing && existing.dataset.nutrient === nutrientKey) {
+                    existing.remove(); return;
+                }
+                if (existing) existing.remove();
                 const unit = nutrientKey === 'calories' ? '大卡' : '克';
-                let html = '<div class="nsp-title-col">' + label + '来源</div><div class="nsp-body">';
+                const colorMap = { calories: '#2D8B46', carbs: '#F59E0B', protein: '#EF4444', fat: '#3B82F6' };
+                const titleColor = colorMap[nutrientKey] || 'var(--primary)';
+                let html = '<div class="nsp-title-col" style="color:' + titleColor + ';">' + label + '来源</div><div class="nsp-body"><div class="nsp-grid2">';
                 sources.forEach(function(s) {
-                    html += '<div class="nsp-row"><span class="nsp-name">' + s.name + '</span><span class="nsp-val">' + Math.round(s.val * 10) / 10 + unit + '</span></div>';
+                    html += '<div class="nsp-grow"><span class="nsp-name">' + s.name + '</span><span class="nsp-val">' + Math.round(s.val * 10) / 10 + unit + '</span></div>';
                 });
-                html += '</div><span class="nsp-close">✕</span></div>';
+                html += '</div></div>';
                 const popup = document.createElement('div');
                 popup.className = 'nutrient-source-popup active';
+                popup.dataset.nutrient = nutrientKey;
                 popup.innerHTML = html;
-                const wrap = container.querySelector('.intake-ring-wrap');
                 if (wrap) wrap.appendChild(popup);
-                popup.querySelector('.nsp-close').addEventListener('click', function(e) { e.stopPropagation(); popup.remove(); });
-                // 鼠标离开浮窗和ring-item时关闭
-                let closeTimer = null;
-                popup.addEventListener('mouseleave', function() { closeTimer = setTimeout(function() { popup.remove(); }, 200); });
-                popup.addEventListener('mouseenter', function() { if (closeTimer) clearTimeout(closeTimer); });
-                item.addEventListener('mouseleave', function() { closeTimer = setTimeout(function() { popup.remove(); }, 200); });
-                item.addEventListener('mouseenter', function() { if (closeTimer) clearTimeout(closeTimer); });
             });
+        });
+        // 点击页面其他地方关闭浮窗（ESC）
+        container.addEventListener('click', function(e) {
+            if (!e.target.closest('.nutrient-source-popup') && !e.target.closest('.ring-item')) {
+                const wrap = container.querySelector('.intake-ring-wrap');
+                if (wrap) { const p = wrap.querySelector('.nutrient-source-popup'); if (p) p.remove(); }
+            }
         });
     }
 
@@ -1919,14 +1927,16 @@
 
     function bindMealAddArea(mealKey) {
         const addBtn = document.getElementById(`mealAddBtn-${mealKey}`);
+        const copyBtn = document.getElementById(`maCopyBtn-${mealKey}`);
         const addArea = document.getElementById(`mealAddArea-${mealKey}`);
         if (!addBtn || !addArea) return;
         // 阻止添加区域内的点击冒泡到 meal-col（避免触发 renderMeals 重置）
         addArea.addEventListener('click', function(e) { e.stopPropagation(); });
         addBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            // 隐藏➕按钮，显示添加区域
+            // 隐藏➕和📋按钮，显示添加区域
             addBtn.style.display = 'none';
+            if (copyBtn) copyBtn.style.display = 'none';
             addArea.style.display = 'block';
             const searchInput = document.getElementById(`maSearch-${mealKey}`);
             if (searchInput) searchInput.focus();
@@ -1976,7 +1986,7 @@
                     if (sel) sel.click();
                 } else if (e.key === 'Escape') {
                     suggestBox.classList.remove('active');
-                    if (!this.value.trim()) { addArea.style.display = 'none'; addBtn.style.display = 'flex'; }
+                    if (!this.value.trim()) { addArea.style.display = 'none'; addBtn.style.display = 'flex'; if (copyBtn) copyBtn.style.display = 'flex'; }
                     this.blur();
                 }
             });
@@ -1991,6 +2001,7 @@
                     if (search && !search.value.trim()) {
                         addArea.style.display = 'none';
                         addBtn.style.display = 'flex';
+                        if (copyBtn) copyBtn.style.display = 'flex';
                     }
                 }
             }
@@ -2180,6 +2191,8 @@
         document.getElementById(`mealAddArea-${mealKey}`).style.display = 'none';
         const addBtn = document.getElementById(`mealAddBtn-${mealKey}`);
         if (addBtn) addBtn.style.display = 'flex';
+        const copyBtn = document.getElementById(`maCopyBtn-${mealKey}`);
+        if (copyBtn) copyBtn.style.display = 'flex';
     }
 
     // === 复制历史食物 ===
@@ -3558,7 +3571,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.5 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.7 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3568,7 +3581,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.5 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.7 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3671,7 +3684,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.5 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.7 事件绑定完成');
     }
 
     // 全局错误捕获
