@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.1</title>
+    <title>智能饮食规划器 V3.3.5</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -214,8 +214,9 @@
         .hist-table .nutrient-td { font-size: 10px; color: var(--text-secondary); }
 
         /* === 餐次内添加食物区域 === */
-        .meal-add-btn-wrap { padding: 0; margin-bottom: 2px; }
-        .meal-add-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 4px 6px; border: 1.5px dashed var(--border); border-radius: 4px; font-size: 11px; cursor: pointer; color: var(--primary); transition: background 0.2s, border-color 0.2s; background: #fff; line-height: 1.2; }
+        .meal-add-btn-wrap { padding: 0; margin-bottom: 2px; display: flex; gap: 4px; align-items: center; }
+        .meal-add-btn { display: flex; align-items: center; justify-content: center; padding: 4px 6px; border: 1.5px dashed var(--border); border-radius: 4px; font-size: 11px; cursor: pointer; color: var(--primary); transition: background 0.2s, border-color 0.2s; background: #fff; line-height: 1.2; flex: 1; }
+
         .meal-add-btn:hover { background: var(--primary-bg); border-color: var(--primary); }
         .meal-add-area { padding: 4px 6px 6px 6px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin: 2px 0; position: relative; }
         .meal-add-area .ma-row { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; position: relative; }
@@ -628,12 +629,12 @@
 <!-- 复制历史食物弹窗 -->
 <div class="modal-overlay" id="copyFoodModal" style="z-index:300;">
     <div class="modal-box copy-modal">
-        <h3>📋 复制历史食物 <button class="copy-close-btn" id="copyFoodClose">✕</button></h3>
+        <h3 style="position:relative;">📋 复制历史食物<button class="copy-close-btn" id="copyFoodClose" style="position:absolute;right:0;top:0;">✕</button></h3>
         <div class="copy-wrap">
             <div class="copy-left" id="copyFoodLeft"></div>
             <div class="copy-right" id="copyFoodRight"><div class="copy-right-empty">点击左侧食物添加到此处<br/>可多选，数量可编辑</div></div>
         </div>
-        <button class="copy-add-btn" id="copyFoodAddBtn" disabled>添加到当前餐次</button>
+        <button class="copy-add-btn" id="copyFoodAddBtn" disabled>添加到…</button>
     </div>
 </div>
 
@@ -670,7 +671,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.1</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.5</div>
 
 <script>
     // ============================================================
@@ -1853,11 +1854,10 @@
             }
             // === 餐次内添加食物按钮（仅当前选中的餐次显示） ===
             if (currentMeal === key) {
-                html += `<div class="meal-add-btn-wrap"><button class="meal-add-btn" data-meal="${key}" id="mealAddBtn-${key}">➕</button></div>`;
+                html += `<div class="meal-add-btn-wrap"><button class="meal-add-btn" data-meal="${key}" id="mealAddBtn-${key}" style="flex:4;">➕</button><button class="meal-add-btn" data-meal="${key}" id="maCopyBtn-${key}" title="复制历史食物" style="flex:1;">📋</button></div>`;
                 html += `<div class="meal-add-area" id="mealAddArea-${key}" style="display:none;">`;
                 html += `<div class="ma-row">`;
                 html += `<div class="ma-search"><input type="text" id="maSearch-${key}" placeholder="搜索食物..." autocomplete="off" /><div class="ma-suggest" id="maSuggest-${key}"></div></div>`;
-                html += `<button class="ma-copy-btn" data-meal="${key}" id="maCopyBtn-${key}" title="复制历史食物">📋</button>`;
                 html += `</div>`;
                 // 重量输入行（选中食物后展开）
                 html += `<div class="ma-weight-row" id="maWeightRow-${key}">`;
@@ -1975,7 +1975,9 @@
                     const sel = curIdx >= 0 ? items[curIdx] : items[0];
                     if (sel) sel.click();
                 } else if (e.key === 'Escape') {
-                    suggestBox.classList.remove('active'); this.blur();
+                    suggestBox.classList.remove('active');
+                    if (!this.value.trim()) { addArea.style.display = 'none'; addBtn.style.display = 'flex'; }
+                    this.blur();
                 }
             });
         }
@@ -2225,6 +2227,7 @@
         copyFoodSelected = [];
         copyFoodRecent = collectRecentFoods(mealKey);
         document.getElementById('copyFoodAddBtn').disabled = true;
+        document.getElementById('copyFoodAddBtn').textContent = '添加到' + mealLabel(mealKey);
         renderCopyFoodLeft();
         document.getElementById('copyFoodRight').innerHTML = '<div class="copy-right-empty">点击左侧食物添加到此处<br/>可多选，数量可编辑</div>';
         document.getElementById('copyFoodModal').classList.add('active');
@@ -2326,6 +2329,11 @@
     document.getElementById('copyFoodClose').addEventListener('click', function() { document.getElementById('copyFoodModal').classList.remove('active'); });
     document.getElementById('copyFoodAddBtn').addEventListener('click', confirmCopyFoodAdd);
     document.getElementById('copyFoodModal').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('copyFoodModal').classList.contains('active')) {
+            document.getElementById('copyFoodModal').classList.remove('active');
+        }
+    });
 
     let selectedElement = null;
     function toggleFoodSelection(el) {
@@ -3550,7 +3558,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.1 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.5 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3560,7 +3568,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.1 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.5 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3663,7 +3671,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.1 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.5 事件绑定完成');
     }
 
     // 全局错误捕获
