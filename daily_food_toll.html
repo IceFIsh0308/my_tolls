@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.0</title>
+    <title>智能饮食规划器 V3.3.1</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -264,7 +264,9 @@
         .copy-item:hover { background: var(--primary-bg); }
         .copy-item .ci-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .copy-item .ci-sub { font-size: 10px; color: var(--text-secondary); margin-left: 6px; white-space: nowrap; }
-        .copy-item .ci-check { font-size: 11px; color: var(--primary); margin-left: 6px; }
+        .copy-item .ci-check { font-size: 11px; color: var(--primary); margin-right: 6px; }
+        .copy-item.picked { background: var(--primary-bg); opacity: 0.75; }
+        .copy-item.picked .ci-check { color: var(--primary); }
         .copy-right .copy-item.selected { background: var(--primary-bg); }
         .copy-right-empty { text-align: center; color: var(--text-secondary); font-size: 12px; padding: 40px 10px; }
         .copy-item-row { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 4px; }
@@ -668,7 +670,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.0</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.1</div>
 
 <script>
     // ============================================================
@@ -2184,10 +2186,10 @@
     let copyFoodRecent = [];             // 近5日食物列表 [{item, meal, date, cnt}]
 
     function collectRecentFoods(mealKey) {
-        // 近5日（不含今天）
+        // 近5日（不含今天），按食物去重（忽略餐次），按出现次数排序
         const user = getCurrentUser(); if (!user) return [];
         const result = [];
-        const seen = new Map(); // key: id|meal -> 合并
+        const seen = new Map(); // key: id -> { item, cnt, lastMeal, lastUnit }
         for (let i = 1; i <= 5; i++) {
             const d = getDateDaysAgo(i);
             const dayData = (dailyData[user.id] || {})[d];
@@ -2196,19 +2198,23 @@
                 const items = dayData[mk] || [];
                 items.forEach(function(it) {
                     if (!it || !it.name) return;
-                    const k = (it.id || 'anon') + '|' + mk;
-                    if (seen.has(k)) { seen.get(k).cnt++; }
+                    const id = it.id || ('anon_' + it.name);
+                    const k = id;
+                    if (seen.has(k)) {
+                        seen.get(k).cnt++;
+                        seen.get(k).lastMeal = mk;   // 记住最近一次餐次
+                        seen.get(k).lastUnit = it.unit || seen.get(k).lastUnit;
+                        if (!seen.get(k).lastQty) seen.get(k).lastQty = it.quantity || it.weight || 100;
+                    }
                     else {
-                        seen.set(k, { item: it, meal: mk, date: d, cnt: 1 });
+                        seen.set(k, { item: it, meal: mk, date: d, cnt: 1, lastUnit: it.unit || '克', lastQty: it.quantity || it.weight || 100 });
                         result.push(seen.get(k));
                     }
                 });
             });
         }
-        // 排序：同餐次靠前，其次按出现次数
-        const mealOrder = { breakfast: 2, lunch: 3, dinner: 4, snack: 5 };
-        mealOrder[mealKey] = 0;
-        result.sort(function(a, b) { return (mealOrder[a.meal] - mealOrder[b.meal]) || (b.cnt - a.cnt); });
+        // 按出现次数降序
+        result.sort(function(a, b) { return b.cnt - a.cnt; });
         return result;
     }
 
@@ -2230,31 +2236,32 @@
             left.innerHTML = '<div class="copy-right-empty">近5日暂无食物记录</div>';
             return;
         }
-        let html = '<div class="copy-title">近5日吃过（' + copyFoodRecent.length + '种）</div>';
-        let lastMeal = null;
-        copyFoodRecent.forEach(r => {
-            const ml = mealLabel(r.meal);
-            if (ml !== lastMeal) { html += '<div class="copy-title">' + ml + '</div>';
-            lastMeal = ml;
-            }
-            const qty = r.item.quantity || r.item.weight || r.item.calories ? Math.round(r.item.quantity) : '';
-            html += '<div class="copy-item" data-idx="' + copyFoodRecent.indexOf(r) + '">' +
+        let html = '<div class="copy-title">近5日吃过（' + copyFoodRecent.length + '种，按次数排序）</div>';
+        copyFoodRecent.forEach(function(r, i) {
+            // 是否已在右侧 → 标记已选
+            const inRight = copyFoodSelected.some(function(s) { return (s.item.id || ('anon_' + s.item.name)) === (r.item.id || ('anon_' + r.item.name)); });
+            html += '<div class="copy-item' + (inRight ? ' picked' : '') + '" data-idx="' + i + '">' +
+                    '<span class="ci-check">' + (inRight ? '✅' : '☐') + '</span>' +
                     '<span class="ci-name">' + r.item.name + '</span>' +
-                    '<span class="ci-sub">' + (r.item.unit || '克') + ' · ' + (r.item.calories ? Math.round(r.item.calories) : '') + 'kcal · ' + r.cnt + '次</span>' +
-                    '<span class="ci-check">➕</span></div>';
+                    '<span class="ci-sub">' + r.cnt + '次</span></div>';
         });
         left.innerHTML = html;
         left.querySelectorAll('.copy-item').forEach(el => {
-            el.addEventListener('click', function() { addCopyFoodFromLeft(parseInt(this.dataset.idx)); });
+            el.addEventListener('click', function(e) { e.stopPropagation(); addCopyFoodFromLeft(parseInt(this.dataset.idx)); });
         });
     }
 
     function addCopyFoodFromLeft(idx) {
         const r = copyFoodRecent[idx]; if (!r) return;
-        // 若同一食物同餐次已在右侧则不重复添加（不同餐次允许）
-        if (copyFoodSelected.find(function(s) { return s.item.id === r.item.id && s.meal === r.meal; })) return;
-        // 单位默认用上一次（r.item.unit 即上次使用的单位）
-        copyFoodSelected.push({ item: r.item, meal: r.meal, quantity: r.item.quantity || r.item.weight || 100, unit: r.item.unit || '克' });
+        const rid = r.item.id || ('anon_' + r.item.name);
+        const existing = copyFoodSelected.find(function(s) { return (s.item.id || ('anon_' + s.item.name)) === rid; });
+        if (existing) {
+            // 已在右侧 → 点击移除
+            copyFoodSelected = copyFoodSelected.filter(function(s) { return (s.item.id || ('anon_' + s.item.name)) !== rid; });
+        } else {
+            // 加入右侧，单位默认上次用的
+            copyFoodSelected.push({ item: r.item, meal: r.meal, quantity: r.lastQty || r.item.quantity || r.item.weight || 100, unit: r.lastUnit || r.item.unit || '克' });
+        }
         renderCopyFoodRight();
         renderCopyFoodLeft();
     }
@@ -2264,7 +2271,7 @@
         if (copyFoodSelected.length === 0) {
             right.innerHTML = '<div class="copy-right-empty">点击左侧食物添加到此处<br/>可多选，数量可编辑</div>';
         } else {
-            let html = '<div class="copy-title">已选 (' + copyFoodSelected.length + ')</div>';
+            let html = '<div class="copy-title">已选 (' + copyFoodSelected.length + ') <span style="cursor:pointer;color:#DC2626;font-weight:400;font-size:11px;" id="copyClearAll">清空</span></div>';
             copyFoodSelected.forEach((s, i) => {
                 html += '<div class="copy-item-row" data-idx="' + i + '">' +
                         '<span class="copy-item-row-name">' + s.item.name + '</span>' +
@@ -2278,6 +2285,9 @@
                         '<span class="ci-check" style="cursor:pointer;font-size:12px;color:#DC2626;" data-rem="' + i + '">✕</span></div>';
             });
             right.innerHTML = html;
+            // 清空
+            const clearBtn = document.getElementById('copyClearAll');
+            if (clearBtn) clearBtn.addEventListener('click', function() { copyFoodSelected = []; renderCopyFoodRight(); renderCopyFoodLeft(); });
             // 数量/单位编辑
             right.querySelectorAll('.copy-item-num').forEach(inp => {
                 inp.addEventListener('input', function() {
@@ -2290,7 +2300,7 @@
                 });
             });
             right.querySelectorAll('.ci-check[data-rem]').forEach(rm => {
-                rm.addEventListener('click', function(e) { e.stopPropagation(); copyFoodSelected.splice(parseInt(this.dataset.rem), 1); renderCopyFoodRight(); });
+                rm.addEventListener('click', function(e) { e.stopPropagation(); copyFoodSelected.splice(parseInt(this.dataset.rem), 1); renderCopyFoodRight(); renderCopyFoodLeft(); });
             });
         }
         document.getElementById('copyFoodAddBtn').disabled = copyFoodSelected.length === 0;
@@ -3540,7 +3550,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.0 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.1 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3550,7 +3560,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.0 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.1 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3653,7 +3663,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.0 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.1 事件绑定完成');
     }
 
     // 全局错误捕获
