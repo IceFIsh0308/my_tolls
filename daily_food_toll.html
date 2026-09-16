@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.8</title>
+    <title>智能饮食规划器 V3.3.9</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -674,7 +674,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.8</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.9</div>
 
 <script>
     // ============================================================
@@ -2345,17 +2345,37 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             // 关闭复制弹窗
-            if (document.getElementById('copyFoodModal').classList.contains('active')) {
-                document.getElementById('copyFoodModal').classList.remove('active');
-            }
-            // 关闭营养来源浮窗
-            document.querySelectorAll('.nutrient-source-popup').forEach(function(p) { p.remove(); });
-            // 关闭体重编辑弹窗
-            var wem = document.getElementById('weightEditModal');
-            if (wem && wem.classList.contains('active')) wem.classList.remove('active');
+            var cfm = document.getElementById('copyFoodModal');
+            if (cfm && cfm.classList.contains('active')) cfm.classList.remove('active');
+            // 关闭用户弹窗
+            if (typeof closeUserModal === 'function' && document.getElementById('userModal').classList.contains('active')) closeUserModal();
             // 关闭食物编辑弹窗
             var fem = document.getElementById('foodEditModal');
             if (fem && fem.classList.contains('active')) fem.classList.remove('active');
+            // 关闭体重编辑弹窗
+            var wem = document.getElementById('weightEditModal');
+            if (wem && wem.classList.contains('active')) wem.classList.remove('active');
+            // 关闭自定义食物弹窗
+            var cusm = document.getElementById('customFoodModal');
+            if (cusm && cusm.classList.contains('active')) cusm.classList.remove('active');
+            // 关闭图表放大弹窗
+            var czm = document.getElementById('chartZoomModal');
+            if (czm && czm.classList.contains('active')) czm.classList.remove('active');
+            // 关闭营养来源浮窗
+            document.querySelectorAll('.nutrient-source-popup').forEach(function(p) { p.remove(); });
+            // 折叠所有展开的餐次添加区域（恢复➕📋）
+            document.querySelectorAll('.meal-add-area').forEach(function(area) {
+                if (area.style.display !== 'none') {
+                    area.style.display = 'none';
+                    var key = area.id.replace('mealAddArea-', '');
+                    var ab = document.getElementById('mealAddBtn-' + key);
+                    if (ab) ab.style.display = 'flex';
+                    var cb = document.getElementById('maCopyBtn-' + key);
+                    if (cb) cb.style.display = 'flex';
+                }
+            });
+            // 清空搜索框焦点
+            if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
         }
     });
 
@@ -3582,7 +3602,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.8 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.9 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3592,7 +3612,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.8 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.9 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3695,7 +3715,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.8 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.9 事件绑定完成');
     }
 
     // 全局错误捕获
