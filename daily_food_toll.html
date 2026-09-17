@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.15</title>
+    <title>智能饮食规划器 V3.3.21</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -145,10 +145,14 @@
         .meal-col .meal-items::-webkit-scrollbar { display: none; }
         .meal-col .meal-items .empty-state { text-align: center; padding: 16px 4px; color: var(--text-secondary); font-size: 11px; }
 
-        .food-item-sm { display: flex; align-items: center; padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: 11px; gap: 0; cursor: default; background: #fff; border-radius: 4px; margin-bottom: 2px; transition: background 0.2s; position: relative; }
+        .food-item-sm { display: flex; flex-direction: column; padding: 5px 6px; border-bottom: 1px solid var(--border); font-size: 11px; gap: 2px; cursor: default; background: #fff; border-radius: 4px; margin-bottom: 2px; transition: background 0.2s; position: relative; }
+        .food-item-sm .fi-row1 { display: flex; align-items: center; gap: 0; }
         .food-item-sm .fname { flex: 1 1 0; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; text-align: left; }
-        .food-item-sm .fweight { font-size: 10px; color: var(--text-secondary); white-space: nowrap; flex: 0 0 auto; width: 52px; text-align: right; margin-right: 8px; }
-        .food-item-sm .fcal { font-weight: 600; font-size: 11px; white-space: nowrap; flex: 0 0 auto; width: 42px; text-align: right; margin-right: 16px; }
+        .food-item-sm .fweight { font-size: 10px; color: var(--text); white-space: nowrap; flex: 0 0 auto; width: 70px; text-align: right; margin-right: 4px; }
+        .food-item-sm .fi-row2 { display: flex; justify-content: flex-end; gap: 6px; font-size: 9px; font-weight: 400; color: var(--text-secondary); opacity: 0.7; padding-left: 2px; margin-top: 1px; width: 100%; }
+        .food-item-sm .fi-row2 span { display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; white-space: nowrap; min-width: 0; }
+        .food-item-sm .fi-row2 .fi-ico { width: 12px; flex-shrink: 0; }
+        .food-item-sm .fi-row2 span { white-space: nowrap; }
         .food-item-sm .factions { display: none; }
         .food-item-sm .fedit { display: none; }
         .food-item-sm .fdel-x { display: none; position: absolute; right: 2px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; font-size: 14px; cursor: pointer; color: #DC2626; padding: 0 4px; z-index: 5; line-height: 1; border-radius: 3px; }
@@ -629,6 +633,18 @@
     </div>
 </div>
 
+<!-- 通用确认弹窗 -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:340px;">
+        <h3 id="confirmTitle">确认</h3>
+        <p id="confirmMsg" style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5;"></p>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="confirmCancel">取消</button>
+            <button class="btn-confirm" id="confirmOk">确认</button>
+        </div>
+    </div>
+</div>
+
 <!-- 复制历史食物弹窗 -->
 <div class="modal-overlay" id="copyFoodModal" style="z-index:300;">
     <div class="modal-box copy-modal">
@@ -678,7 +694,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.15</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.21</div>
 
 <script>
     // ============================================================
@@ -1507,6 +1523,7 @@
     let editingUserId = null;
     let editingFoodIndex = null;
     let editingFoodMeal = null;
+    let editingCustomPer100 = null;
     let editingWeightDate = null, editingWeightTime = null;
     let selectedDate = null;
     let dailyData = {};
@@ -1866,7 +1883,7 @@
                     const kcal = Math.round(f.calories || 0);
                     const weightDisplay = (f.unit === '个' || f.unit === '份') ? (f.quantity || f.weight || 0) : Math.round(f.weight || 0);
                     const unitDisplay = f.unit || '克';
-                    html += `<div class="food-item-sm" draggable="true" data-meal="${key}" data-idx="${idx}" title="双击编辑"><span class="fname">${f.name}</span><span class="fweight">${weightDisplay}${unitDisplay}</span><span class="fcal">${kcal}</span><button class="fdel-x" data-meal="${key}" data-idx="${idx}" title="删除">✕</button></div>`;
+                    html += `<div class="food-item-sm" draggable="true" data-meal="${key}" data-idx="${idx}" title="双击编辑"><div class="fi-row1"><span class="fname">${f.name}</span><span class="fweight">${weightDisplay}${unitDisplay}</span><button class="fdel-x" data-meal="${key}" data-idx="${idx}" title="删除">✕</button></div><div class="fi-row2"><span><span class="fi-ico">🔥</span>${kcal}</span><span><span class="fi-ico">🍚</span>${Math.round(f.carbs || 0)}</span><span><span class="fi-ico">🥚</span>${Math.round(f.protein || 0)}</span><span><span class="fi-ico">🥑</span>${Math.round(f.fat || 0)}</span></div></div>`;
                 });
             }
             // === 餐次内添加食物按钮（仅当前选中的餐次显示） ===
@@ -1913,10 +1930,19 @@
                 el.addEventListener('mousedown', function(e) { startX = e.clientX; startY = e.clientY; isDragging = false; });
                 el.addEventListener('mousemove', function(e) { if (startX !== undefined) { const dx = e.clientX - startX; const dy = e.clientY - startY; if (Math.sqrt(dx * dx + dy * dy) > 5) { isDragging = true; } } });
                 el.addEventListener('mouseup', function(e) { startX = startY = undefined; });
-                // 双击直接打开编辑
-                el.addEventListener('dblclick', function(e) { e.stopPropagation(); const meal = el.dataset.meal; const idx = parseInt(el.dataset.idx); openFoodEditModal(meal, idx); });
+                // 双击：内置食物 inline 改数量；自定义食物弹卡片
+                el.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    const meal = el.dataset.meal; const idx = parseInt(el.dataset.idx);
+                    const meals = getCurrentMeals();
+                    const it = meals[meal] ? meals[meal][idx] : null;
+                    if (!it) return;
+                    const isCustom = it.isCustom || (it.id && String(it.id).indexOf('custom_') === 0);
+                    if (isCustom) { openFoodEditModal(meal, idx); }
+                    else { inlineEditFoodQty(meal, idx); }
+                });
             });
-            container.querySelectorAll('.fdel-x').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); const meal = this.dataset.meal; const idx = parseInt(this.dataset.idx); if (confirm('确定删除该食物吗？')) { deleteFoodItem(meal, idx); } }); });
+            container.querySelectorAll('.fdel-x').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); const meal = this.dataset.meal; const idx = parseInt(this.dataset.idx); showConfirm('删除食物', '确定删除该食物吗？', function(ok) { if (ok) deleteFoodItem(meal, idx); }); }); });
             // === 绑定餐次内添加按钮事件 ===
             // 容器级拖放：支持拖到空餐次
             container.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
@@ -2408,6 +2434,7 @@
 
     let dragSrcData = null;
     function handleDragStart(e) {
+        // 只处理真正的条目本身（避免子元素触发多个）
         const el = e.target.closest('.food-item-sm');
         if (!el) return;
         const meal = el.dataset.meal;
@@ -2415,6 +2442,8 @@
         dragSrcData = { meal, idx, el };
         e.dataTransfer.setData('text/plain', JSON.stringify({ meal, idx }));
         e.dataTransfer.effectAllowed = 'move';
+        // 拖影只显示当前条目，避免多个条目一起
+        try { e.dataTransfer.setDragImage(el, 0, 0); } catch(_) {}
         el.classList.add('dragging');
         clearSelected();
     }
@@ -2425,7 +2454,15 @@
         dragSrcData = null;
     }
     function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
-    function handleDragEnter(e) { e.preventDefault(); const el = e.target.closest('.food-item-sm'); if (el && el !== dragSrcData?.el) { el.classList.add('drag-over'); } }
+    function handleDragEnter(e) {
+        e.preventDefault();
+        const el = e.target.closest('.food-item-sm');
+        if (el && el !== dragSrcData?.el) {
+            // 先移除所有 drag-over，只高亮当前进入的（避免多个条目同时高亮）
+            document.querySelectorAll('.food-item-sm.drag-over').forEach(x => x.classList.remove('drag-over'));
+            el.classList.add('drag-over');
+        }
+    }
     function handleDragLeave(e) { const el = e.target.closest('.food-item-sm'); if (el) { el.classList.remove('drag-over'); } }
 
     // 统一拖放处理：支持同餐次排序 + 跨餐次移动
@@ -2482,36 +2519,128 @@
     }
 
     // ============================================================
+    //  通用确认弹窗（替代浏览器 confirm）
+    // ============================================================
+    let confirmCallback = null;
+    function showConfirm(title, msg, callback) {
+        document.getElementById('confirmTitle').textContent = title || '确认';
+        document.getElementById('confirmMsg').textContent = msg || '';
+        document.getElementById('confirmModal').classList.add('active');
+        confirmCallback = callback;
+    }
+    document.getElementById('confirmOk').addEventListener('click', function() {
+        document.getElementById('confirmModal').classList.remove('active');
+        if (confirmCallback) { const cb = confirmCallback; confirmCallback = null; cb(true); }
+    });
+    document.getElementById('confirmCancel').addEventListener('click', function() {
+        document.getElementById('confirmModal').classList.remove('active');
+        confirmCallback = null;
+    });
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+        if (e.target === this) { this.classList.remove('active'); confirmCallback = null; }
+    });
+
+    // ============================================================
     //  食物编辑 — 与V8一致
     // ============================================================
+    function inlineEditFoodQty(meal, idx) {
+        const meals = getCurrentMeals();
+        const items = meals[meal] || [];
+        const item = items[idx];
+        if (!item) return;
+        const container = document.getElementById('meal-' + meal);
+        const els = container.querySelectorAll('.food-item-sm');
+        const el = els[idx];
+        if (!el) return;
+        const row1 = el.querySelector('.fi-row1');
+        if (!row1) return;
+        // 已处于编辑态则先退出
+        const inp = row1.querySelector('.inline-qty-input');
+        if (inp) { inp.focus(); return; }
+        // 记录原始每100g营养值（从当前条目反推）
+        const w = item.weight || item.quantity || 100;
+        const per100 = { 
+            calories: w > 0 ? (item.calories || 0) / w * 100 : 0,
+            carbs: w > 0 ? (item.carbs || 0) / w * 100 : 0,
+            protein: w > 0 ? (item.protein || 0) / w * 100 : 0,
+            fat: w > 0 ? (item.fat || 0) / w * 100 : 0
+        };
+        // 替换 fweight 为输入框
+        const unit = item.unit || '克';
+        const fw = row1.querySelector('.fweight');
+        fw.style.display = 'none';
+        const div = document.createElement('div');
+        div.className = 'inline-qty-wrap';
+        div.style.cssText = 'display:flex;align-items:center;gap:2px;flex:0 0 auto;width:70px;margin-right:8px;';
+        div.innerHTML = '<input type="number" class="inline-qty-input" value="' + (item.quantity || item.weight || 100) + '" min="0.1" step="1" style="width:44px;padding:1px 4px;border:1px solid var(--primary);border-radius:4px;font-size:11px;text-align:right;" /><span style="font-size:10px;color:var(--text-secondary);">' + unit + '</span>';
+        fw.parentNode.insertBefore(div, fw);
+        const input = div.querySelector('.inline-qty-input');
+        input.focus(); input.select();
+        let done = false;
+        function commit() {
+            if (done) return; done = true;
+            const qty = parseFloat(input.value) || 0;
+            const oldW = w;
+            div.remove(); fw.style.display = '';
+            if (qty <= 0) { renderMeals(); showToast('⚠️ 数量无效'); return; }
+            let newWeight = qty;
+            if (unit === '份' || unit === '个') {
+                const unitWeight = item.unitWeight || (unit === '份' ? 100 : 50);
+                newWeight = qty * unitWeight;
+            }
+            const ratio = oldW > 0 ? newWeight / oldW : 1;
+            const oldCal = item.calories || 0, oldCarbs = item.carbs || 0, oldProtein = item.protein || 0, oldFat = item.fat || 0;
+            item.calories = Math.round(oldCal * ratio * 10) / 10;
+            item.carbs = Math.round(oldCarbs * ratio * 10) / 10;
+            item.protein = Math.round(oldProtein * ratio * 10) / 10;
+            item.fat = Math.round(oldFat * ratio * 10) / 10;
+            item.weight = newWeight;
+            item.quantity = qty;
+            // 云端同步
+            if (isOnlineMode && item._dbId) {
+                supabaseClient.from('daily_data').update({
+                    weight: item.weight, quantity: qty, calories: item.calories,
+                    protein: item.protein, carbs: item.carbs, fat: item.fat
+                }).eq('id', item._dbId).catch(e => console.error('云端更新数量失败:', e));
+            }
+            saveAll(); renderMeals(); renderAdvice(); renderHistory();
+            showToast('✅ 已更新 ' + item.name + ' ' + qty + unit);
+        }
+        input.addEventListener('keydown', function(e) { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { done = true; div.remove(); fw.style.display = ''; renderMeals(); } });
+        input.addEventListener('blur', function() { commit(); });
+        input.addEventListener('click', function(e) { e.stopPropagation(); });
+    }
+
     function openFoodEditModal(meal, idx) {
         const meals = getCurrentMeals();
         const item = meals[meal][idx];
         if (!item) return;
         editingFoodMeal = meal; editingFoodIndex = idx;
+        const isCustom = item.isCustom || (item.id && String(item.id).indexOf('custom_') === 0);
         document.getElementById('editFoodName').value = item.name;
         document.getElementById('editFoodWeight').value = item.weight;
         document.getElementById('editFoodUnit').value = item.unit || '克';
-        document.getElementById('editFoodCarbs').value = item.carbs || 0;
-        document.getElementById('editFoodProtein').value = item.protein || 0;
-        document.getElementById('editFoodFat').value = item.fat || 0;
+        // 自定义食物：显示100g营养值（反推每100g），当前条目重量可能是任意值
+        const w = item.weight || 100;
+        const per100 = w > 0 ? 100 / w : 1;
+        document.getElementById('editFoodCarbs').value = Math.round((item.carbs || 0) * per100 * 10) / 10;
+        document.getElementById('editFoodProtein').value = Math.round((item.protein || 0) * per100 * 10) / 10;
+        document.getElementById('editFoodFat').value = Math.round((item.fat || 0) * per100 * 10) / 10;
         document.getElementById('foodEditModal').classList.add('active');
-        // 记录原始重量，用于重量变化时按比例调整营养素
-        const origWeight = item.weight;
-        const origCarbs = item.carbs || 0;
-        const origProtein = item.protein || 0;
-        const origFat = item.fat || 0;
+        // 记录原始每100g值，用于重量变化时按比例调整
+        const origPer100 = { c: (item.carbs || 0) * per100, p: (item.protein || 0) * per100, f: (item.fat || 0) * per100 };
+        editingCustomPer100 = origPer100;
         const weightInput = document.getElementById('editFoodWeight');
         weightInput.oninput = function() {
             const newWeight = parseFloat(this.value);
-            if (!newWeight || newWeight <= 0 || !origWeight) return;
-            const ratio = newWeight / origWeight;
-            document.getElementById('editFoodCarbs').value = Math.round(origCarbs * ratio * 10) / 10;
-            document.getElementById('editFoodProtein').value = Math.round(origProtein * ratio * 10) / 10;
-            document.getElementById('editFoodFat').value = Math.round(origFat * ratio * 10) / 10;
+            if (!newWeight || newWeight <= 0) return;
+            const ratio = newWeight / 100;
+            document.getElementById('editFoodCarbs').value = Math.round(origPer100.c * ratio * 10) / 10;
+            document.getElementById('editFoodProtein').value = Math.round(origPer100.p * ratio * 10) / 10;
+            document.getElementById('editFoodFat').value = Math.round(origPer100.f * ratio * 10) / 10;
         };
     }
-    function closeFoodEditModal() { document.getElementById('foodEditModal').classList.remove('active'); editingFoodMeal = null; editingFoodIndex = null; }
+    function closeFoodEditModal() { document.getElementById('foodEditModal').classList.remove('active'); editingFoodMeal = null; editingFoodIndex = null; editingCustomPer100 = null; }
     async function saveFoodEdit() {
         if (editingFoodMeal === null || editingFoodIndex === null) return;
         const meals = getCurrentMeals();
@@ -2524,11 +2653,41 @@
         const protein = parseFloat(document.getElementById('editFoodProtein').value) || 0;
         const fat = parseFloat(document.getElementById('editFoodFat').value) || 0;
         if (!weight || weight <= 0) { showToast('⚠️ 请输入有效重量'); return; }
-        item.name = name; item.weight = weight; item.unit = unit; item.carbs = carbs; item.protein = protein; item.fat = fat;
-        item.calories = carbs * 4 + protein * 4 + fat * 9;
-        const foodDb = getFullFoodDB();
-        const found = foodDb.find(f => f.id === item.id);
-        if (found) { item.name = found.name; }
+        const isCustom = item.isCustom || (item.id && String(item.id).indexOf('custom_') === 0);
+        if (isCustom) {
+            // 自定义食物：卡片里是100g营养值。保存时：
+            // 1. 当前条目的营养素 = 100g值 × 实际克重/100
+            // 2. 同步更新自定义食物库里的组成（calories/protein/carbs/fat 为每100g值）
+            const factor = weight / 100;
+            item.calories = Math.round((carbs * 4 + protein * 4 + fat * 9) * factor * 10) / 10;
+            item.carbs = Math.round(carbs * factor * 10) / 10;
+            item.protein = Math.round(protein * factor * 10) / 10;
+            item.fat = Math.round(fat * factor * 10) / 10;
+            item.name = name; item.weight = weight; item.unit = unit;
+            // 同步自定义食物库（每100g值）
+            const uid = getCurrentUser() ? getCurrentUser().id : null;
+            if (uid && customFoods[uid]) {
+                const cf = customFoods[uid].find(f => f.id === item.id);
+                if (cf) {
+                    cf.name = name;
+                    cf.calories = Math.round((carbs * 4 + protein * 4 + fat * 9) * 10) / 10;
+                    cf.protein = Math.round(protein * 10) / 10;
+                    cf.carbs = Math.round(carbs * 10) / 10;
+                    cf.fat = Math.round(fat * 10) / 10;
+                    saveAll();
+                    // 云端更新 custom_foods
+                    if (isOnlineMode && cf._dbId) {
+                        supabaseClient.from('custom_foods').update({
+                            name: cf.name, calories: cf.calories, protein: cf.protein, carbs: cf.carbs, fat: cf.fat
+                        }).eq('id', cf._dbId).catch(e => console.error('云端更新自定义食物失败:', e));
+                    }
+                }
+            }
+        } else {
+            // 内置食物：保持原逻辑不变（这里通常不会走到，内置走 inline）
+            item.name = name; item.weight = weight; item.unit = unit; item.carbs = carbs; item.protein = protein; item.fat = fat;
+            item.calories = carbs * 4 + protein * 4 + fat * 9;
+        }
         // 云端同步：更新 daily_data 记录
         if (isOnlineMode && item._dbId) {
             try {
@@ -3313,7 +3472,8 @@
     async function clearToday() {
         const user = getCurrentUser(); if (!user) { showToast('请先选择用户'); return; }
         const date = selectedDate || getToday();
-        if (confirm(`清空 ${date} 的所有饮食记录？`)) {
+        showConfirm('清空饮食记录', '清空 ' + date + ' 的所有饮食记录？', async function(ok) {
+            if (!ok) return;
             if (!dailyData[user.id]) dailyData[user.id] = {};
             const oldMeals = dailyData[user.id][date];
             // 先云端删除当天所有记录
@@ -3331,7 +3491,7 @@
             dailyData[user.id][date] = { breakfast: [], lunch: [], dinner: [], snack: [] };
             saveAll(); renderMeals(); renderAdvice(); renderHistory();
             showToast('已清空');
-        }
+        });
     }
     async function addFoodItem(food, weight, unit) {
         if (!food || weight <= 0) { showToast('请选择食物并输入有效数量'); return; }
@@ -3655,7 +3815,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.15 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.21 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3665,7 +3825,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.15 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.21 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3768,7 +3928,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.15 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.21 事件绑定完成');
     }
 
     // 全局错误捕获
