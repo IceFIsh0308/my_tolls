@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.9</title>
+    <title>智能饮食规划器 V3.3.10</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -674,7 +674,11 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.9</div>
+<div id="syncWarnBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fee;border-top:1px solid #e55;color:#c00;padding:6px 12px;font-size:12px;z-index:9999;cursor:pointer;" onclick="document.getElementById('syncWarnDetail').style.display = document.getElementById('syncWarnDetail').style.display==='none'?'block':'none'">
+  ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
+  <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
+</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.10</div>
 
 <script>
     // ============================================================
@@ -737,6 +741,7 @@
     let supabaseClient = null;
     let currentUser = null;     // Supabase auth user
     let isOnlineMode = false;   // 是否已登录云端
+    let syncErrors = [];        // 同步失败记录 [{date, meal, name, error, time}]
 
     try {
         supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -945,8 +950,9 @@
                                         supabaseClient.from('daily_data').insert({
                                             user_id: uid, date, meal_key: mealKey,
                                             food_id: li.id, food_name: li.name, weight: li.weight, unit: li.unit,
-                                            quantity: li.quantity, calories: li.calories, protein: li.protein, carbs: li.carbs, fat: li.fat
-                                        }).then(({data})=>{if(data) li._dbId=data.id}).catch(e=>console.error('合并同步失败:',e));
+                                            calories: li.calories, protein: li.protein, carbs: li.carbs, fat: li.fat,
+                                            created_at: li._localTime || new Date().toISOString(),
+                                        }).then(({data})=>{if(data) li._dbId=data.id}).catch(e=>{console.error('合并同步失败:',e); addSyncError(date, mealKey, li.name, (e.message||JSON.stringify(e)).slice(0,100));});
                                     }
                                 });
                             }
@@ -1087,6 +1093,7 @@
                 }
             }
             saveAll();
+            clearSyncErrors();
         } catch (e) {
             console.error('云端数据加载失败，使用本地数据:', e);
             // 不覆盖本地数据
@@ -1108,7 +1115,8 @@
                             food_id: item.id || '', food_name: item.name,
                             weight: item.weight, unit: item.unit,
                             calories: item.calories, protein: item.protein,
-                            carbs: item.carbs, fat: item.fat
+                            carbs: item.carbs, fat: item.fat,
+                            created_at: item._localTime || new Date().toISOString(),
                         });
                     });
                 }
@@ -3326,6 +3334,7 @@
             protein: Math.round((food.protein || 0) * factor * 10) / 10,
             carbs: Math.round((food.carbs || 0) * factor * 10) / 10,
             fat: Math.round((food.fat || 0) * factor * 10) / 10,
+            _localTime: new Date().toISOString(),
         };
         const date = selectedDate || getToday();
         if (!dailyData[user.id]) dailyData[user.id] = {};
@@ -3335,17 +3344,27 @@
         // 云端同步
         if (isOnlineMode && currentUser) {
             try {
-                const { data, error } = await supabaseClient.from('daily_data').insert({
+                const payload = {
                     user_id: currentUser.id, date, meal_key: currentMeal,
                     food_id: item.id, food_name: item.name, weight: item.weight, unit: item.unit,
-                    quantity: item.quantity,
-                    calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat
-                }).select().single();
+                    calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat,
+                    created_at: item._localTime || new Date().toISOString(),
+                };
+                let { data, error } = await supabaseClient.from('daily_data').insert(payload).select().single();
+                if (error && error.code === 'PGRST204') {
+                    console.warn('字段不匹配，尝试最小字段集插入:', error.message);
+                    const minimal = { user_id: payload.user_id, date: payload.date, meal_key: payload.meal_key,
+                        food_id: payload.food_id, food_name: payload.food_name, weight: payload.weight,
+                        calories: payload.calories, protein: payload.protein, carbs: payload.carbs, fat: payload.fat };
+                    const retry = await supabaseClient.from('daily_data').insert(minimal).select().single();
+                    data = retry.data; error = retry.error;
+                }
                 if (error) throw error;
                 if (data) item._dbId = data.id;
             } catch(e) {
                 console.error('云端添加失败:', e);
-                showToast('⚠️ 云端同步失败，数据已存本地，刷新后可能丢失');
+                addSyncError(date, currentMeal, item.name, (e.message || JSON.stringify(e)).slice(0, 100));
+                showToast('⚠️ 云端同步失败，数据已存本地');
             }
         }
         const mealNames = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' };
@@ -3542,17 +3561,18 @@
                 try { await supabaseClient.from('weight_records').update({ weight, bodyfat: bodyfat || null }).eq('id', existing._dbId); } catch(e) { console.error('云端更新体重失败:', e); }
             }
         } else {
-            const record = { date, weight, bodyfat: bodyfat || null, time };
+            const record = { date, weight, bodyfat: bodyfat || null, time, _localTime: new Date().toISOString() };
             weightRecords[user.id].push(record);
             // 云端新增
             if (isOnlineMode && currentUser) {
                 try {
                     const { data, error } = await supabaseClient.from('weight_records').insert({
-                        user_id: currentUser.id, date, weight, bodyfat: bodyfat || null, time, note: ''
+                        user_id: currentUser.id, date, weight, bodyfat: bodyfat || null, time, note: '',
+                        created_at: record._localTime,
                     }).select().single();
                     if (error) throw error;
                     if (data) record._dbId = data.id;
-                } catch(e) { console.error('云端添加体重失败:', e); showToast('⚠️ 体重云端同步失败'); }
+                } catch(e) { console.error('云端添加体重失败:', e); addSyncError(date, '体重', weight+'kg', (e.message||JSON.stringify(e)).slice(0,100)); }
             }
         }
         saveAll(); renderWeightChart(); renderUserInfo(); renderAdvice(); renderMeals();
@@ -3571,6 +3591,27 @@
         el.classList.add('show');
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+
+    // 同步错误管理
+    function addSyncError(date, meal, name, error) {
+        syncErrors.push({ date, meal, name: name || '', error: error || '', time: new Date().toLocaleTimeString() });
+        updateSyncWarnBar();
+    }
+    function clearSyncErrors() {
+        syncErrors = [];
+        updateSyncWarnBar();
+    }
+    function updateSyncWarnBar() {
+        const bar = document.getElementById('syncWarnBar');
+        const count = document.getElementById('syncWarnCount');
+        const detail = document.getElementById('syncWarnDetail');
+        if (!bar) return;
+        if (syncErrors.length === 0) { bar.style.display = 'none'; return; }
+        bar.style.display = 'block';
+        count.textContent = syncErrors.length;
+        const mealNames = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐' };
+        detail.innerHTML = syncErrors.map(e => `${e.date} ${mealNames[e.meal]||e.meal} — ${e.name} — ${e.error} (${e.time})`).join('<br>');
     }
 
     // ============================================================
@@ -3602,7 +3643,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.9 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.10 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3612,7 +3653,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.9 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.10 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3715,7 +3756,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.9 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.10 事件绑定完成');
     }
 
     // 全局错误捕获
