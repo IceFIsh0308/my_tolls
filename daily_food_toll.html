@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.10</title>
+    <title>智能饮食规划器 V3.3.14</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -81,7 +81,7 @@
         .user-detail .gap-bad { color: #DC2626; }
         .user-detail .initial-info { font-size: 11px; color: var(--text-secondary); background: var(--card); padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 6px; }
 
-        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .advice-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
         .advice-grid .macro-box { background: var(--bg); border-radius: var(--radius-sm); padding: 6px 4px; text-align: center; }
         .advice-grid .macro-box .num { font-size: 16px; font-weight: 700; }
         .advice-grid .macro-box .label { font-size: 11px; color: var(--text-secondary); }
@@ -678,7 +678,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.10</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.14</div>
 
 <script>
     // ============================================================
@@ -1741,7 +1741,7 @@
         } else if (rec.needType === 'surplus' && rec.muscleToGain > 0) {
             targetAnalysis = `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">需要增加肌肉：${rec.muscleToGain.toFixed(1)} 公斤${rec.fatToLose > 0 ? ` · 需要减掉脂肪：${rec.fatToLose.toFixed(1)} 公斤` : ''}</div>`;
         }
-        el.innerHTML = `<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">每周锻炼 ${actMapAdv[user.activity] || user.activity} 次 · 活动系数 ${rec.activityFactor.toFixed(2)}</div><div class="advice-grid"><div class="macro-box"><div class="num" style="color:var(--primary);">${rec.targetCal}</div><div class="label">每日目标热量</div><div class="sub">${goalLabel}</div></div><div class="macro-box"><div class="num" style="color:${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? 'var(--primary)' : '#DC2626') : 'var(--text-secondary)'};">${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? '⬇' : '⬆') + rec.dailyNeed : '0'}</div><div class="label">${rec.needType === 'deficit' ? '每日缺口' : rec.needType === 'surplus' ? '每日盈余' : '平衡'}</div><div class="sub">总需求 ${rec.totalNeed} 大卡</div></div></div>${targetAnalysis}<div class="text-secondary" style="font-size:10px;margin-top:4px;">基础代谢 ${rec.bmr} 大卡 · 每日总消耗 ${rec.tdee} 大卡 · ${rec.days} 天</div>`;
+        el.innerHTML = `<div class="advice-grid"><div class="macro-box"><div class="num" style="color:var(--text-secondary);">${rec.tdee}</div><div class="label">每日总消耗</div><div class="sub">活动系数 ${rec.activityFactor.toFixed(2)}</div></div><div class="macro-box"><div class="num" style="color:var(--primary);">${rec.targetCal}</div><div class="label">每日目标热量</div><div class="sub">${goalLabel}</div></div><div class="macro-box"><div class="num" style="color:${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? 'var(--primary)' : '#DC2626') : 'var(--text-secondary)'};">${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? '⬇' : '⬆') + rec.dailyNeed : '0'}</div><div class="label">${rec.needType === 'deficit' ? '每日缺口' : rec.needType === 'surplus' ? '每日盈余' : '平衡'}</div><div class="sub">${rec.needType === "deficit" ? "总缺口" : rec.needType === "surplus" ? "总盈余" : ""} ${rec.totalNeed} 大卡</div></div></div>${targetAnalysis}`;
     }
 
     // ============================================================
@@ -1756,11 +1756,11 @@
         const rec = calcRecommendation(user);
 
         // === 实际缺口渲染（移到环形图上方） ===
-        const actualDeficit = rec.targetCal - total.calories;
+        const actualDeficit = rec.tdee - total.calories;
         const deficitDisplay = Math.round(actualDeficit);
         let cls = 'zero', sign = '';
         if (deficitDisplay > 0) { cls = 'positive'; sign = '+'; } else if (deficitDisplay < 0) { cls = 'negative'; }
-        const detailText = `目标 ${rec.targetCal} - 已摄入 ${Math.round(total.calories)}`;
+        const detailText = `TDEE ${rec.tdee} - 已摄入 ${Math.round(total.calories)}`;
         let deficitHtml = `<div class="actual-deficit-box"><span class="label">🎯 实际缺口</span><span><span class="value ${cls}">${sign}${deficitDisplay} 大卡</span><span class="detail">${detailText}</span></span></div>`;
 
         // === 环形图渲染 ===
@@ -2336,7 +2336,17 @@
         currentMeal = copyFoodMealKey;
         for (const s of copyFoodSelected) {
             if (!s.quantity || s.quantity <= 0) continue;
-            let food = { id: s.item.id, name: s.item.name, calories: s.item.calories, protein: s.item.protein, carbs: s.item.carbs, fat: s.item.fat, unitWeight: s.item.unitWeight };
+            // 反推每100g营养值：item 里存的是整份热量，weight 是实际克重
+            const w = s.item.weight || s.quantity || 100;
+            const factorRev = w > 0 ? (100 / w) : 1;
+            let food = {
+                id: s.item.id, name: s.item.name,
+                calories: Math.round((s.item.calories || 0) * factorRev * 10) / 10,
+                protein: Math.round((s.item.protein || 0) * factorRev * 10) / 10,
+                carbs: Math.round((s.item.carbs || 0) * factorRev * 10) / 10,
+                fat: Math.round((s.item.fat || 0) * factorRev * 10) / 10,
+                unitWeight: s.item.unitWeight
+            };
             await addFoodItem(food, s.quantity, s.unit);
         }
         currentMeal = prevMeal;
@@ -3643,7 +3653,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.10 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.14 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3653,7 +3663,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.10 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.14 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3756,7 +3766,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.10 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.14 事件绑定完成');
     }
 
     // 全局错误捕获
