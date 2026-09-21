@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.27</title>
+    <title>智能饮食规划器 V3.3.31</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -16,7 +16,7 @@
             --border: #E5E7EB; --shadow: 0 2px 8px rgba(0,0,0,0.06);
             --radius: 12px; --radius-sm: 8px;
             --protein: #EF4444; --carbs: #F59E0B; --fat: #3B82F6;
-            --module-height: 125px;
+            --module-height: 165px;
         }
         body { background: var(--bg); color: var(--text); padding: 12px; min-height: 100vh; display: flex; justify-content: center; }
         .app { max-width: 1400px; width: 100%; }
@@ -78,7 +78,7 @@
         .user-detail .gap-bad { color: #DC2626; }
         .user-detail .initial-info { font-size: 11px; color: var(--text-secondary); background: var(--card); padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 6px; }
 
-        .advice-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+        .advice-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; flex: 1; align-items: center; }
         .advice-grid .macro-box { background: var(--bg); border-radius: var(--radius-sm); padding: 6px 4px; text-align: center; }
         .advice-grid .macro-box .num { font-size: 16px; font-weight: 700; }
         .advice-grid .macro-box .label { font-size: 11px; color: var(--text-secondary); }
@@ -88,6 +88,7 @@
         .macro-row .m-item .val { font-weight: 600; }
         .macro-row .m-item .lbl { color: var(--text-secondary); font-size: 10px; }
 
+        #intakeContent { flex: 1; display: flex; flex-direction: column; }
         .actual-deficit-box { background: var(--bg); border-radius: var(--radius-sm); padding: 2px 8px; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--primary); }
         .actual-deficit-box .label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
         .actual-deficit-box .value { font-size: 16px; font-weight: 700; }
@@ -96,7 +97,7 @@
         .actual-deficit-box .value.zero { color: var(--text-secondary); }
         .actual-deficit-box .detail { font-size: 10px; color: var(--text-secondary); margin-left: 8px; }
 
-        .intake-ring-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; flex: 1; align-items: stretch; }
+        .intake-ring-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; flex: 1; align-items: end; }
         .ring-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); border-radius: var(--radius-sm); padding: 2px 2px; position: relative; }
         .ring-item .ring-wrap { position: relative; width: 64px; height: 64px; }
         .ring-item .ring-wrap svg { transform: rotate(-90deg); width: 64px; height: 64px; }
@@ -145,10 +146,9 @@
         .food-item-sm { display: flex; align-items: center; padding: 5px 6px; border-bottom: 1px solid var(--border); font-size: 11px; gap: 4px; cursor: default; background: #fff; border-radius: 4px; margin-bottom: 2px; transition: background 0.2s; position: relative; }
         .food-item-sm .fname { flex: 1 1 0; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; text-align: left; }
         .food-item-sm .fweight { font-size: 10px; color: var(--text); white-space: nowrap; flex: 0 0 auto; text-align: right; margin-left: 6px; }
-        .food-item-sm .fi-nuts { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 400; color: var(--text-secondary); opacity: 0.75; flex: 0 0 auto; margin-left: 8px; }
-        .food-item-sm .fi-nuts span { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
-        .food-item-sm .fi-nuts .fi-ico { width: 14px; flex-shrink: 0; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
-        .food-item-sm .fi-nuts .fi-num { min-width: 22px; text-align: left; font-variant-numeric: tabular-nums; }
+        .food-item-sm .fi-nuts { display: flex; align-items: center; gap: 2px; font-size: 9px; font-weight: 400; color: var(--text-secondary); opacity: 0.75; flex: 0 0 auto; margin-left: 6px; }
+        .food-item-sm .fi-nuts span { display: inline-flex; align-items: center; gap: 1px; white-space: nowrap; }
+        .food-item-sm .fi-nuts .fi-ico { flex-shrink: 0; }
         .food-item-sm .fi-btn-zone { width: 0; flex-shrink: 0; transition: width 0.15s; display: flex; align-items: center; justify-content: flex-end; overflow: visible; }
         .food-item-sm:hover .fi-btn-zone { width: 20px; }
         .food-item-sm .fdel-x { opacity: 0; position: absolute; right: -2px; top: 50%; transform: translateY(-50%); background: #fff; border: 1px solid var(--border); font-size: 11px; cursor: pointer; color: #DC2626; padding: 0 3px; z-index: 5; line-height: 1.2; border-radius: 4px; transition: opacity 0.15s; }
@@ -694,7 +694,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.27</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.31</div>
 
 <script>
     // ============================================================
@@ -1695,8 +1695,7 @@
         } else { needType = 'maintain'; safetyStatus = 'normal'; speedText = '维持当前体重'; }
         const container = document.getElementById('previewContent');
         let html = '';
-        if (goal === 'cut') { html += `<div class="row-item"><span class="label">需要减掉脂肪</span><span class="value">${fatToLose.toFixed(1)} 公斤</span></div>`; }
-        else if (goal === 'bulk') { html += `<div class="row-item"><span class="label">需要增加肌肉</span><span class="value">${muscleToGain.toFixed(1)} 公斤</span></div>`; }
+        if (goal === 'bulk') { html += `<div class="row-item"><span class="label">需要增加肌肉</span><span class="value">${muscleToGain.toFixed(1)} 公斤</span></div>`; }
         else { html += `<div class="row-item"><span class="label">目标</span><span class="value">维持当前体重</span></div>`; }
         if (needType !== 'maintain') {
             html += `<div class="row-item"><span class="label">总热量${needType === 'deficit' ? '缺口' : '盈余'}</span><span class="value">${Math.round(totalNeed)} 大卡</span></div>`;
@@ -1733,11 +1732,13 @@
         if (user.targetWeight && latest) { const gap = latest.weight - user.targetWeight; weightGap = gap.toFixed(1) + '公斤'; weightGapClass = gap > 0 ? 'gap-bad' : (gap < -0.5 ? 'gap-good' : ''); }
         let bfGap = '-', bfGapClass = '';
         if (user.targetBodyFat && latest && latest.bodyfat) { const gap = latest.bodyfat - user.targetBodyFat; bfGap = gap.toFixed(1) + '%'; bfGapClass = gap > 0 ? 'gap-bad' : (gap < -0.5 ? 'gap-good' : ''); }
+        let fatToLoseText = '—';
+        if (latest && user.targetWeight && user.targetBodyFat) { const curFat = latest.weight * (latest.bodyfat / 100); const tgtFat = user.targetWeight * (user.targetBodyFat / 100); const fl = curFat - tgtFat; fatToLoseText = (fl >= 0 ? fl : 0).toFixed(1) + ' 公斤'; }
         const initWeight = user.initialWeight || user.weight;
         const initBf = user.initialBodyFat || user.bodyFat;
         const hasInitSnapshot = !!(user.initialWeight && user.initialBodyFat);
         const initInfo = hasInitSnapshot ? `📌 建档时 ${initWeight}公斤 / ${initBf}%` : `📌 建档快照: 未记录`;
-        detail.innerHTML = `<strong>${user.name}</strong> · ${user.gender==='male'?'男':'女'} · ${user.age}岁 · ${user.height}厘米<br/><span style="display:inline-block;width:100%;"><span>当前体重 <strong>${latest ? latest.weight : user.weight}</strong> 公斤</span><span style="margin-left:12px;">体脂 <strong>${latest && latest.bodyfat ? latest.bodyfat : user.bodyFat}</strong> %</span><span class="initial-info">${initInfo}</span></span><br/>目标: ${goalMap[user.goal]} → ${user.targetWeight||'—'}公斤 / ${user.targetBodyFat||'—'}% · 锻炼: ${actMap[user.activity]||'—'}/周 · ${user.days||'—'}天<span style="margin-left:6px;cursor:pointer;color:var(--primary);font-size:11px;" onclick="openUserModal('${user.id}')">✎</span><br/><span style="font-size:11px;">距目标体重: <span class="${weightGapClass}">${weightGap}</span> · 距目标体脂: <span class="${bfGapClass}">${bfGap}</span></span><span style="font-size:10px;color:var(--text-secondary);margin-left:8px;">(基于最新记录)</span>`;
+        detail.innerHTML = `<strong>${user.name}</strong> · ${user.gender==='male'?'男':'女'} · ${user.age}岁 · ${user.height}厘米<br/><span style="display:inline-block;width:100%;"><span>当前体重 <strong>${latest ? latest.weight : user.weight}</strong> 公斤</span><span style="margin-left:12px;">体脂 <strong>${latest && latest.bodyfat ? latest.bodyfat : user.bodyFat}</strong> %</span><span class="initial-info">${initInfo}</span></span><br/>目标: ${goalMap[user.goal]} → ${user.targetWeight||'—'}公斤 / ${user.targetBodyFat||'—'}% · 锻炼: ${actMap[user.activity]||'—'}/周 · ${user.days||'—'}天<span style="margin-left:6px;cursor:pointer;color:var(--primary);font-size:11px;" onclick="openUserModal('${user.id}')">✎</span><br/><span style="font-size:11px;">距目标体重: <span class="${weightGapClass}">${weightGap}</span> · 距目标体脂: <span class="${bfGapClass}">${bfGap}</span> · 需减脂量: <strong>${fatToLoseText}</strong></span><span style="font-size:10px;color:var(--text-secondary);margin-left:8px;">(基于最新记录)</span>`;
     }
 
     // ============================================================
@@ -1753,13 +1754,7 @@
         if (!rec) { el.innerHTML = '<div class="text-secondary text-center" style="padding:12px 0;">数据不足</div>'; return; }
         const actMapAdv = { 0: '0次', 1: '1~2次', 2: '1~2次', 3: '3~4次', 4: '3~4次', 5: '5~6次', 6: '5~6次', 7: '7次+' };
         const goalLabel = { cut: '⬇减脂', bulk: '⬆增肌', maintain: '➡维持' }[user.goal] || '';
-        let targetAnalysis = '';
-        if (rec.needType === 'deficit' && rec.fatToLose > 0) {
-            targetAnalysis = `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">需要减掉脂肪：${rec.fatToLose.toFixed(1)} 公斤${rec.muscleToGain > 0 ? ` · 需要增加肌肉：${rec.muscleToGain.toFixed(1)} 公斤` : ''}</div>`;
-        } else if (rec.needType === 'surplus' && rec.muscleToGain > 0) {
-            targetAnalysis = `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">需要增加肌肉：${rec.muscleToGain.toFixed(1)} 公斤${rec.fatToLose > 0 ? ` · 需要减掉脂肪：${rec.fatToLose.toFixed(1)} 公斤` : ''}</div>`;
-        }
-        el.innerHTML = `<div class="advice-grid"><div class="macro-box"><div class="num" style="color:var(--text-secondary);">${rec.tdee}</div><div class="label">每日总消耗</div><div class="sub">活动系数 ${rec.activityFactor.toFixed(2)}</div></div><div class="macro-box"><div class="num" style="color:var(--primary);">${rec.targetCal}</div><div class="label">每日目标热量</div><div class="sub">${goalLabel}</div></div><div class="macro-box"><div class="num" style="color:${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? 'var(--primary)' : '#DC2626') : 'var(--text-secondary)'};">${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? '⬇' : '⬆') + rec.dailyNeed : '0'}</div><div class="label">${rec.needType === 'deficit' ? '每日缺口' : rec.needType === 'surplus' ? '每日盈余' : '平衡'}</div><div class="sub">${rec.needType === "deficit" ? "总缺口" : rec.needType === "surplus" ? "总盈余" : ""} ${rec.totalNeed} 大卡</div></div></div>${targetAnalysis}`;
+        el.innerHTML = `<div class="advice-grid"><div class="macro-box"><div class="num" style="color:var(--text-secondary);">${rec.tdee}</div><div class="label">每日总消耗</div><div class="sub">活动系数 ${rec.activityFactor.toFixed(2)}</div></div><div class="macro-box"><div class="num" style="color:var(--primary);">${rec.targetCal}</div><div class="label">每日目标热量</div><div class="sub">${goalLabel}</div></div><div class="macro-box"><div class="num" style="color:${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? 'var(--primary)' : '#DC2626') : 'var(--text-secondary)'};">${rec.dailyNeed > 0 ? (rec.needType === 'deficit' ? '⬇' : '⬆') + rec.dailyNeed : '0'}</div><div class="label">${rec.needType === 'deficit' ? '每日缺口' : rec.needType === 'surplus' ? '每日盈余' : '平衡'}</div><div class="sub">${rec.needType === "deficit" ? "总缺口" : rec.needType === "surplus" ? "总盈余" : ""} ${rec.totalNeed} 大卡</div></div></div>`;
     }
 
     // ============================================================
@@ -1883,7 +1878,7 @@
                     const kcal = Math.round(f.calories || 0);
                     const weightDisplay = (f.unit === '个' || f.unit === '份') ? (f.quantity || f.weight || 0) : Math.round(f.weight || 0);
                     const unitDisplay = f.unit || '克';
-                    html += `<div class="food-item-sm" draggable="true" data-meal="${key}" data-idx="${idx}" title="双击编辑"><span class="fname" title="${f.name}">${f.name}</span><span class="fweight">${weightDisplay}${unitDisplay}</span><span class="fi-nuts"><span><span class="fi-ico">🔥</span><span class="fi-num">${kcal}</span></span><span><span class="fi-ico">🍚</span><span class="fi-num">${Math.round(f.carbs || 0)}</span></span><span><span class="fi-ico">🥚</span><span class="fi-num">${Math.round(f.protein || 0)}</span></span><span><span class="fi-ico">🥑</span><span class="fi-num">${Math.round(f.fat || 0)}</span></span></span><button class="fdel-x" data-meal="${key}" data-idx="${idx}" title="删除">✕</button></div>`;
+                    html += `<div class="food-item-sm" draggable="true" data-meal="${key}" data-idx="${idx}" title="双击编辑"><span class="fname" title="${f.name}">${f.name}</span><span class="fweight">${weightDisplay}${unitDisplay}</span><span class="fi-nuts"><span><span class="fi-ico">🔥</span>${kcal}</span><span><span class="fi-ico">🍚</span>${Math.round(f.carbs || 0)}</span><span><span class="fi-ico">🥚</span>${Math.round(f.protein || 0)}</span><span><span class="fi-ico">🥑</span>${Math.round(f.fat || 0)}</span></span><button class="fdel-x" data-meal="${key}" data-idx="${idx}" title="删除">✕</button></div>`;
                 });
             }
             // === 餐次内添加食物按钮（仅当前选中的餐次显示） ===
@@ -3817,7 +3812,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.27 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.31 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3827,7 +3822,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.27 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.31 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3930,7 +3925,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.27 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.31 事件绑定完成');
     }
 
     // 全局错误捕获
