@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.31</title>
+    <title>智能饮食规划器 V3.3.32</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -493,7 +493,7 @@
                 </div>
                 <div class="weight-filter">
                     <span class="text-secondary" style="font-size:10px;margin-left:4px;">(优先空腹) · 双击图表可放大</span>
-                    <input type="number" id="weightDays" value="14" min="3" max="90" style="width:55px;margin-left:auto;" placeholder="天数" title="自定义天数" />
+                    <input type="number" id="weightDays" value="8" min="3" max="90" style="width:55px;margin-left:auto;" placeholder="天数" title="自定义天数" />
                 </div>
                 <div class="weight-chart-container" id="weightChartContainer">
                     <div class="weight-chart-label">📈 体重 (kg)</div>
@@ -694,7 +694,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.31</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.32</div>
 
 <script>
     // ============================================================
@@ -2706,38 +2706,36 @@
         document.getElementById('chartZoomModal').classList.add('active');
         setTimeout(() => {
             const user = getCurrentUser();
-            const days = parseInt(document.getElementById('weightDays').value) || 14;
-            const dates = [];
-            for (let i = days - 1; i >= 0; i--) { dates.push(getDateDaysAgo(i)); }
-            const records = [];
             const userWeightRecords = (user ? weightRecords[user.id] : []) || [];
-            dates.forEach(date => {
-                const dayRecords = userWeightRecords.filter(r => r.date === date);
-                let best = dayRecords.find(r => r.time === 'fasting');
-                if (!best) best = dayRecords[0];
-                if (best) { records.push({ date, weight: best.weight, bodyfat: best.bodyfat, time: best.time }); }
-                else { records.push({ date, weight: null, bodyfat: null }); }
-            });
+            const dateMap = {};
+            userWeightRecords.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
+            const sortedDates = Object.keys(dateMap).sort().reverse();
+            const maxShow = parseInt(document.getElementById('weightDays').value) || 8;
+            const recentDates = sortedDates.slice(0, maxShow).reverse();
+            const records = recentDates.map(d => ({ date: d, weight: dateMap[d].weight, bodyfat: dateMap[d].bodyfat, time: dateMap[d].time }));
+            const dates = recentDates;
+            const days = records.length;
+            while (records.length < maxShow) { records.unshift({ date: null, weight: null, bodyfat: null }); dates.unshift(null); }
             renderWeightLineChart(records, dates, days, 'zoomWeightChart', 'zoomChartContainer');
             renderBodyFatBarChart(records, dates, days, 'zoomBodyFatChart', 'zoomChartContainer');
         }, 100);
     }
     function closeChartZoom() { document.getElementById('chartZoomModal').classList.remove('active'); }
 
+    function timePriority(t) { const m = { fasting: 0, morning: 1, noon: 2, evening: 3 }; return m[t] !== undefined ? m[t] : 4; }
     function renderWeightChart() {
         const user = getCurrentUser();
-        const days = parseInt(document.getElementById('weightDays').value) || 14;
-        const dates = [];
-        for (let i = days - 1; i >= 0; i--) { dates.push(getDateDaysAgo(i)); }
-        const records = [];
         const userWeightRecords = (user ? weightRecords[user.id] : []) || [];
-        dates.forEach(date => {
-            const dayRecords = userWeightRecords.filter(r => r.date === date);
-            let best = dayRecords.find(r => r.time === 'fasting');
-            if (!best) best = dayRecords[0];
-            if (best) { records.push({ date, weight: best.weight, bodyfat: best.bodyfat, time: best.time }); }
-            else { records.push({ date, weight: null, bodyfat: null }); }
-        });
+        const dateMap = {};
+        userWeightRecords.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
+        const sortedDates = Object.keys(dateMap).sort().reverse();
+        const maxShow = parseInt(document.getElementById('weightDays').value) || 8;
+        const recentDates = sortedDates.slice(0, maxShow).reverse();
+        const records = recentDates.map(d => ({ date: d, weight: dateMap[d].weight, bodyfat: dateMap[d].bodyfat, time: dateMap[d].time }));
+        const dates = recentDates;
+        const days = records.length;
+        // 补空位让图表连续
+        while (records.length < maxShow) { records.unshift({ date: null, weight: null, bodyfat: null }); dates.unshift(null); }
 
         // === 体重折线图 ===
         renderWeightLineChart(records, dates, days, 'weightChart', 'weightChartContainer');
@@ -2948,31 +2946,38 @@
         const user = getCurrentUser();
         const tbody = document.getElementById('histBody');
         if (!user) { tbody.innerHTML = '<tr><td colspan="8" class="text-secondary text-center">请选择用户</td></tr>'; return; }
-        let start = document.getElementById('histStart').value;
-        let end = document.getElementById('histEnd').value;
-        if (!start && !end) { end = getToday(); start = getDateDaysAgo(6); document.getElementById('histStart').value = start; document.getElementById('histEnd').value = end; }
-        else if (!start) { start = getDateDaysAgo(30); document.getElementById('histStart').value = start; }
-        else if (!end) { end = getToday(); document.getElementById('histEnd').value = end; }
-        const dates = [];
-        let d = new Date(start);
-        const endD = new Date(end);
-        while (d <= endD) { const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; dates.push(ds); d.setDate(d.getDate() + 1); }
-        if (histSortOrder === 'desc') dates.reverse();
-        let html = '';
-        let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, count = 0;
+        // 收集所有有效记录（有热量数据的日期），不按固定日期范围
         const userDailyData = dailyData[user.id] || {};
-        dates.forEach(date => {
+        const allDates = Object.keys(userDailyData).sort().reverse(); // 降序
+        const validEntries = [];
+        for (const date of allDates) {
             const meals = userDailyData[date] || { breakfast: [], lunch: [], dinner: [], snack: [] };
             const total = calcMealTotal(meals);
-            const target = getDayTarget(user, date);
-            const tdee = getDayTdee(user, date);
-            const deficit = tdee - total.calories;
-            if (total.calories > 0 || date === getToday()) {
-                const deficitStr = deficit > 0 ? `+${Math.round(deficit)}` : Math.round(deficit);
-                const cls = deficit >= 0 ? 'deficit-ok' : 'deficit-over';
-                html += `<tr class="data-row" data-date="${date}"><td>${date}</td><td>${getWeekdayCN(date)}</td><td>${Math.round(total.calories)}</td><td>${target}</td><td class="${cls}">${deficitStr}</td><td class="nutrient-td">${Math.round(total.carbs)}</td><td class="nutrient-td">${Math.round(total.protein)}</td><td class="nutrient-td">${Math.round(total.fat)}</td></tr>`;
-                if (total.calories > 0) { totalCal += total.calories; totalProtein += total.protein; totalCarbs += total.carbs; totalFat += total.fat; count++; }
+            if (total.calories > 0) {
+                const target = getDayTarget(user, date);
+                const tdee = getDayTdee(user, date);
+                const deficit = tdee - total.calories;
+                validEntries.push({ date, total, target, tdee, deficit });
             }
+        }
+        // 默认取最近9条；如果有自定义日期范围则按范围过滤
+        let start = document.getElementById('histStart').value;
+        let end = document.getElementById('weightHistEnd').value;
+        let filtered;
+        if (start || end) {
+            filtered = validEntries.filter(e => (!start || e.date >= start) && (!end || e.date <= end));
+        } else {
+            filtered = validEntries.slice(0, 9);
+        }
+        if (histSortOrder === 'desc') { /* filtered already desc */ }
+        else { filtered = filtered.slice().reverse(); }
+        let html = '';
+        let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, count = 0;
+        filtered.forEach(e => {
+            const deficitStr = e.deficit > 0 ? `+${Math.round(e.deficit)}` : Math.round(e.deficit);
+            const cls = e.deficit >= 0 ? 'deficit-ok' : 'deficit-over';
+            html += `<tr class="data-row" data-date="${e.date}"><td>${e.date}</td><td>${getWeekdayCN(e.date)}</td><td>${Math.round(e.total.calories)}</td><td>${e.target}</td><td class="${cls}">${deficitStr}</td><td class="nutrient-td">${Math.round(e.total.carbs)}</td><td class="nutrient-td">${Math.round(e.total.protein)}</td><td class="nutrient-td">${Math.round(e.total.fat)}</td></tr>`;
+            totalCal += e.total.calories; totalProtein += e.total.protein; totalCarbs += e.total.carbs; totalFat += e.total.fat; count++;
         });
         if (html) {
             const avgCal = count > 0 ? Math.round(totalCal / count) : 0;
@@ -3053,12 +3058,21 @@
         if (!user) { tbody.innerHTML = '<tr><td colspan="5" class="text-secondary text-center">请选择用户</td></tr>'; return; }
         let start = document.getElementById('weightHistStart').value;
         let end = document.getElementById('weightHistEnd').value;
-        // 默认跟随热量统计的日期范围
+        // 默认显示最近8条有效记录（每天一条，优先空腹）
+        if (!start && !end) {
+            const allRecs = (weightRecords[user.id] || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+            const dateMap = {};
+            allRecs.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
+            const recent8 = Object.keys(dateMap).sort().reverse().slice(0, 8);
+            const records = recent8.map(d => dateMap[d]);
+            renderWeightHistoryRows(records, tbody);
+            renderWeightChart();
+            return;
+        }
         if (!start) { start = getDateDaysAgo(13); }
         if (!end) { end = getToday(); }
         document.getElementById('weightHistStart').value = start;
         document.getElementById('weightHistEnd').value = end;
-
         const records = (weightRecords[user.id] || []).filter(r => r.date >= start && r.date <= end).sort((a, b) => b.date.localeCompare(a.date));
         const timeMap = { fasting: '空腹', morning: '早晨', noon: '中午', evening: '晚上' };
         if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-secondary text-center">所选日期无体重记录</td></tr>'; return; }
@@ -3812,7 +3826,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.31 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.32 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3822,7 +3836,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.31 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.32 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3925,7 +3939,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.31 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.32 事件绑定完成');
     }
 
     // 全局错误捕获
@@ -3933,7 +3947,5 @@
         console.error('❌ 全局JS错误:', e.message, '@', e.filename, 'line:', e.lineno);
     });
 </script>
-<script type="text/javascript" src="/accessproxy_statics/h5_fp.js" defer></script>
-<script type="text/javascript" src="/accessproxy_statics/wm.js" defer></script>
 </body>
 </html>
