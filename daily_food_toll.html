@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.34</title>
+    <title>智能饮食规划器 V3.3.35</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -29,7 +29,9 @@
         .row-top .card .card-body, .row-top .card .user-detail { flex: 1; }
         .row-top .card-body { flex: 1; display: flex; flex-direction: column; min-height: var(--module-height); max-height: var(--module-height); overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
         .row-top .card-body::-webkit-scrollbar { display: none; }
-        .row-bottom { display: flex; gap: 12px; margin-top: 12px; align-items: stretch; }
+        .row-middle { display: flex; gap: 12px; align-items: stretch; margin-bottom: 16px; }
+        .row-middle .card { flex: 1; min-width: 0; }
+        .row-bottom { display: flex; gap: 12px; align-items: stretch; }
         .row-bottom .card { min-width: 0; }
         .row-bottom .card-left { flex: 2; }
         .row-bottom .card-center { flex: 1.5; min-width: 300px; }
@@ -694,7 +696,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.34</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.35</div>
 
 <script>
     // ============================================================
@@ -3061,14 +3063,14 @@
         if (!user) { tbody.innerHTML = '<tr><td colspan="5" class="text-secondary text-center">请选择用户</td></tr>'; return; }
         let start = document.getElementById('weightHistStart').value;
         let end = document.getElementById('weightHistEnd').value;
-        // 默认显示最近8条有效记录（每天一条，优先空腹）
+        // 默认显示最近7条有效记录（每天一条，优先空腹）
         let records;
         if (!start && !end) {
             const allRecs = (weightRecords[user.id] || []).slice().sort((a, b) => b.date.localeCompare(a.date));
             const dateMap = {};
             allRecs.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
-            const recent8 = Object.keys(dateMap).sort().reverse().slice(0, 8);
-            records = recent8.map(d => dateMap[d]);
+            const recent7 = Object.keys(dateMap).sort().reverse().slice(0, 7);
+            records = recent7.map(d => dateMap[d]);
         } else {
             if (!start) { start = getDateDaysAgo(13); }
             if (!end) { end = getToday(); }
@@ -3828,7 +3830,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.34 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.35 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3838,7 +3840,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.34 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.35 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3941,7 +3943,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.34 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.35 事件绑定完成');
     }
 
     // 全局错误捕获
