@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.32</title>
+    <title>智能饮食规划器 V3.3.33</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -493,7 +493,7 @@
                 </div>
                 <div class="weight-filter">
                     <span class="text-secondary" style="font-size:10px;margin-left:4px;">(优先空腹) · 双击图表可放大</span>
-                    <input type="number" id="weightDays" value="8" min="3" max="90" style="width:55px;margin-left:auto;" placeholder="天数" title="自定义天数" />
+                    <input type="number" id="weightDays" value="14" min="3" max="90" style="width:55px;margin-left:auto;" placeholder="天数" title="自定义天数" />
                 </div>
                 <div class="weight-chart-container" id="weightChartContainer">
                     <div class="weight-chart-label">📈 体重 (kg)</div>
@@ -694,7 +694,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.32</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.33</div>
 
 <script>
     // ============================================================
@@ -2706,16 +2706,18 @@
         document.getElementById('chartZoomModal').classList.add('active');
         setTimeout(() => {
             const user = getCurrentUser();
+            const days = parseInt(document.getElementById('weightDays').value) || 14;
+            const dates = [];
+            for (let i = days - 1; i >= 0; i--) { dates.push(getDateDaysAgo(i)); }
+            const records = [];
             const userWeightRecords = (user ? weightRecords[user.id] : []) || [];
-            const dateMap = {};
-            userWeightRecords.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
-            const sortedDates = Object.keys(dateMap).sort().reverse();
-            const maxShow = parseInt(document.getElementById('weightDays').value) || 8;
-            const recentDates = sortedDates.slice(0, maxShow).reverse();
-            const records = recentDates.map(d => ({ date: d, weight: dateMap[d].weight, bodyfat: dateMap[d].bodyfat, time: dateMap[d].time }));
-            const dates = recentDates;
-            const days = records.length;
-            while (records.length < maxShow) { records.unshift({ date: null, weight: null, bodyfat: null }); dates.unshift(null); }
+            dates.forEach(date => {
+                const dayRecords = userWeightRecords.filter(r => r.date === date);
+                let best = dayRecords.find(r => r.time === 'fasting');
+                if (!best) best = dayRecords[0];
+                if (best) { records.push({ date, weight: best.weight, bodyfat: best.bodyfat, time: best.time }); }
+                else { records.push({ date, weight: null, bodyfat: null }); }
+            });
             renderWeightLineChart(records, dates, days, 'zoomWeightChart', 'zoomChartContainer');
             renderBodyFatBarChart(records, dates, days, 'zoomBodyFatChart', 'zoomChartContainer');
         }, 100);
@@ -2725,17 +2727,18 @@
     function timePriority(t) { const m = { fasting: 0, morning: 1, noon: 2, evening: 3 }; return m[t] !== undefined ? m[t] : 4; }
     function renderWeightChart() {
         const user = getCurrentUser();
+        const days = parseInt(document.getElementById('weightDays').value) || 14;
+        const dates = [];
+        for (let i = days - 1; i >= 0; i--) { dates.push(getDateDaysAgo(i)); }
+        const records = [];
         const userWeightRecords = (user ? weightRecords[user.id] : []) || [];
-        const dateMap = {};
-        userWeightRecords.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
-        const sortedDates = Object.keys(dateMap).sort().reverse();
-        const maxShow = parseInt(document.getElementById('weightDays').value) || 8;
-        const recentDates = sortedDates.slice(0, maxShow).reverse();
-        const records = recentDates.map(d => ({ date: d, weight: dateMap[d].weight, bodyfat: dateMap[d].bodyfat, time: dateMap[d].time }));
-        const dates = recentDates;
-        const days = records.length;
-        // 补空位让图表连续
-        while (records.length < maxShow) { records.unshift({ date: null, weight: null, bodyfat: null }); dates.unshift(null); }
+        dates.forEach(date => {
+            const dayRecords = userWeightRecords.filter(r => r.date === date);
+            let best = dayRecords.find(r => r.time === 'fasting');
+            if (!best) best = dayRecords[0];
+            if (best) { records.push({ date, weight: best.weight, bodyfat: best.bodyfat, time: best.time }); }
+            else { records.push({ date, weight: null, bodyfat: null }); }
+        });
 
         // === 体重折线图 ===
         renderWeightLineChart(records, dates, days, 'weightChart', 'weightChartContainer');
@@ -2962,7 +2965,7 @@
         }
         // 默认取最近9条；如果有自定义日期范围则按范围过滤
         let start = document.getElementById('histStart').value;
-        let end = document.getElementById('weightHistEnd').value;
+        let end = document.getElementById('histEnd').value;
         let filtered;
         if (start || end) {
             filtered = validEntries.filter(e => (!start || e.date >= start) && (!end || e.date <= end));
@@ -3059,21 +3062,20 @@
         let start = document.getElementById('weightHistStart').value;
         let end = document.getElementById('weightHistEnd').value;
         // 默认显示最近8条有效记录（每天一条，优先空腹）
+        let records;
         if (!start && !end) {
             const allRecs = (weightRecords[user.id] || []).slice().sort((a, b) => b.date.localeCompare(a.date));
             const dateMap = {};
             allRecs.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
             const recent8 = Object.keys(dateMap).sort().reverse().slice(0, 8);
-            const records = recent8.map(d => dateMap[d]);
-            renderWeightHistoryRows(records, tbody);
-            renderWeightChart();
-            return;
+            records = recent8.map(d => dateMap[d]);
+        } else {
+            if (!start) { start = getDateDaysAgo(13); }
+            if (!end) { end = getToday(); }
+            document.getElementById('weightHistStart').value = start;
+            document.getElementById('weightHistEnd').value = end;
+            records = (weightRecords[user.id] || []).filter(r => r.date >= start && r.date <= end).sort((a, b) => b.date.localeCompare(a.date));
         }
-        if (!start) { start = getDateDaysAgo(13); }
-        if (!end) { end = getToday(); }
-        document.getElementById('weightHistStart').value = start;
-        document.getElementById('weightHistEnd').value = end;
-        const records = (weightRecords[user.id] || []).filter(r => r.date >= start && r.date <= end).sort((a, b) => b.date.localeCompare(a.date));
         const timeMap = { fasting: '空腹', morning: '早晨', noon: '中午', evening: '晚上' };
         if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-secondary text-center">所选日期无体重记录</td></tr>'; return; }
         let html = '';
@@ -3826,7 +3828,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.32 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.33 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3836,7 +3838,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.32 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.33 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3939,7 +3941,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.32 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.33 事件绑定完成');
     }
 
     // 全局错误捕获
