@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.33</title>
+    <title>智能饮食规划器 V3.3.34</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -29,7 +29,7 @@
         .row-top .card .card-body, .row-top .card .user-detail { flex: 1; }
         .row-top .card-body { flex: 1; display: flex; flex-direction: column; min-height: var(--module-height); max-height: var(--module-height); overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
         .row-top .card-body::-webkit-scrollbar { display: none; }
-        .row-bottom { display: flex; gap: 12px; align-items: stretch; }
+        .row-bottom { display: flex; gap: 12px; margin-top: 12px; align-items: stretch; }
         .row-bottom .card { min-width: 0; }
         .row-bottom .card-left { flex: 2; }
         .row-bottom .card-center { flex: 1.5; min-width: 300px; }
@@ -694,7 +694,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.33</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.34</div>
 
 <script>
     // ============================================================
@@ -3828,7 +3828,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.33 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.34 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3838,7 +3838,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.33 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.34 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3941,7 +3941,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.33 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.34 事件绑定完成');
     }
 
     // 全局错误捕获
