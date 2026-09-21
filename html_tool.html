@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🛠️ HTML 工具箱 V1.0.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#F5F7FA;color:#1A1A2E;min-height:100vh;display:flex;justify-content:center;padding:20px}
+.tool-wrap{width:100%}
+.header{text-align:center;margin-bottom:8px}
+.header h1{font-size:24px;color:#2D8B46;margin-bottom:6px}
+.header p{font-size:13px;color:#6B7280}
+.tabs{display:flex;justify-content:center;gap:10px;margin-bottom:16px}
+.tab-btn{padding:10px 24px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;color:#6B7280;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.tab-btn:hover{border-color:#2D8B46;color:#2D8B46}
+.tab-btn.active{background:#2D8B46;border-color:#2D8B46;color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+/* ===== 部署引擎 ===== */
+.deploy-app{width:100%;transition:max-width .3s;margin:0 auto}
+.deploy-app.col3{max-width:880px}
+.deploy-app.col4{max-width:1180px}
+.status-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px}.status-bar a{pointer-events:auto;color:inherit;text-decoration:underline;cursor:pointer}
+.status-idle{background:#F3F4F6;color:#6B7280}
+.status-ok{background:#D1FAE5;color:#059669}
+.status-err{background:#FEE2E2;color:#DC2626}
+.status-warn{background:#FEF3C7;color:#D97706}
+.status-run{background:#DBEAFE;color:#2563EB}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cols{display:flex;gap:14px;align-items:stretch;justify-content:center}
+.col{flex:1;min-width:0;max-width:300px;display:flex;flex-direction:column}
+.card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);flex:1;display:flex;flex-direction:column;overflow:hidden}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;color:#374151}
+.field{margin-bottom:10px}
+.field-label{font-size:12px;color:#6B7280;margin-bottom:3px}
+.field-value{font-size:13px;color:#9CA3AF;min-height:20px}
+.field-value.filled{color:#1A1A2E;font-weight:500}
+.field input,.field select{width:100%;padding:6px 10px;border:1.5px solid #E5E7EB;border-radius:6px;font-size:13px;background:#fff}
+.field select{cursor:pointer}
+.field select:disabled,.field input:disabled{background:#F9FAFB;color:#9CA3AF}
+.hint{font-size:11px;color:#9CA3AF;margin-top:2px}
+.hint a{color:#2D8B46}
+.file-drop{border:2px dashed #D1D5DB;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;flex:1;min-height:80px;display:flex;flex-direction:column;justify-content:center}
+.file-drop:hover{border-color:#2D8B46;background:#F0FDF4}
+.file-drop.dragover{border-color:#2D8B46;background:#E8F5E9}
+.file-drop .icon{font-size:24px;margin-bottom:4px}
+.file-drop p{color:#6B7280;font-size:12px}
+.check-list{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;padding-top:4px;padding-bottom:10px}
+.check-card{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 14px;border-radius:6px;border:1px solid #E5E7EB;font-size:12px;color:#9CA3AF;background:#F9FAFB;margin:8px 0;width:fit-content;min-width:160px;box-sizing:border-box}
+.check-card.ok{color:#2D8B46;border-color:#D1FAE5;background:#F0FDF4}
+.check-card.fail{color:#DC2626;border-color:#FEE2E2;background:#FEF2F2}
+.check-card .icon{width:16px;text-align:center;flex-shrink:0}
+.check-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.info-card{display:flex;justify-content:space-between;align-items:center;padding:5px 12px;border-radius:6px;background:#F9FAFB;border:1px solid #F3F4F6;font-size:12px;margin-bottom:6px}
+.info-card .label{color:#9CA3AF}
+.info-card .value{color:#9CA3AF;font-weight:500}
+.info-card .value.filled{color:#1A1A2E}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:#2D8B46;color:#fff}
+.btn-primary:hover{background:#246B38}
+.btn-primary:disabled{background:#D1D5DB;cursor:not-allowed}
+.btn-secondary{background:#F3F4F6;color:#374151}
+.btn-secondary:hover{background:#E5E7EB}
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn-row .btn{flex:1}
+textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:6px;font-size:13px;font-family:inherit}
+.log{background:#1F2937;color:#D1D5DB;border-radius:8px;padding:12px;font-size:12px;font-family:'SF Mono',Monaco,monospace;overflow-y:auto;overflow-x:hidden;margin-top:12px;display:none;flex:1;min-height:0}
+.log.show{display:block}
+.log .line{margin:2px 0;white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere}
+.log-ok{color:#4ADE80}.log-warn{color:#FBBF24}.log-err{color:#F87171}.log-info{color:#60A5FA}
+.step-indicator{display:flex;align-items:center;gap:4px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+.step-indicator .step{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.step-indicator .step-done{background:#D1FAE5;color:#059669}
+.step-indicator .step-current{background:#DBEAFE;color:#2563EB}
+.step-indicator .step-pending{background:#F3F4F6;color:#9CA3AF}
+.step-indicator .step-success{background:#D1FAE5;color:#059669}
+.step-indicator .step-error{background:#FEE2E2;color:#DC2626}
+.step-indicator .step-arrow{color:#D1D5DB;font-size:12px}
+.token-ok{color:#059669;font-size:12px;margin-top:2px;display:none}
+.token-ok.show{display:block}
+.refresh-btn{display:inline-block;margin-left:6px;font-size:11px;color:#2D8B46;cursor:pointer;text-decoration:underline}
+.col-deploy{display:none}
+.col-deploy.show{display:flex}
+@media(max-width:900px){.cols{flex-direction:column}.col{max-width:100%}}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9998;justify-content:center;align-items:center}
+.modal-overlay.show{display:flex}
+.modal-card{background:#fff;border-radius:14px;padding:28px;box-shadow:0 8px 32px rgba(0,0,0,0.15);max-width:380px;width:90%;animation:modalIn .2s}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:16px;font-weight:600;color:#1A1A2E;margin-bottom:6px}
+.modal-desc{font-size:13px;color:#6B7280;margin-bottom:18px;line-height:1.5}
+.modal-input{width:100%;padding:10px 14px;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;outline:none;margin-bottom:16px;box-sizing:border-box}
+.modal-input:focus{border-color:#2D8B46}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end}
+.modal-btn{padding:9px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.modal-btn-cancel{background:#F3F4F6;color:#6B7280}
+.modal-btn-cancel:hover{background:#E5E7EB}
+.modal-btn-ok{background:#2D8B46;color:#fff}
+.modal-btn-ok:hover{background:#246B38}
+/* ===== 生成器 ===== */
+.gen-app{max-width:760px;width:100%;transition:max-width .3s;margin:0 auto}
+.gen-app.with-preview{max-width:1280px}
+.gen-steps{display:flex;justify-content:center;gap:0;margin-bottom:28px}
+.gen-steps .step{display:flex;align-items:center;gap:0}
+.gen-steps .step-num{width:28px;height:28px;border-radius:50%;background:#2D8B46;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.gen-steps .step-text{font-size:13px;color:#374151;margin-left:8px;white-space:nowrap}
+.gen-steps .step-arrow{color:#D1D5DB;margin:0 12px;font-size:14px}
+.form-group{margin-bottom:20px}
+.form-label{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;display:block}
+.form-hint{font-size:12px;color:#9CA3AF;margin-top:4px}
+.code-input{width:100%;height:480px;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:vertical;outline:none;tab-size:2;line-height:1.6;background:#FAFAFA;color:#1A1A2E;transition:border-color .2s,background .2s}
+.code-input:focus{border-color:#2D8B46;background:#fff}
+.name-input{width:100%;padding:12px 14px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:14px;outline:none;transition:border-color .2s}
+.name-input:focus{border-color:#2D8B46}
+.name-row{display:flex;align-items:center;gap:0}
+.name-row .name-input{flex:1;border-radius:10px 0 0 10px}
+.name-row .ext{padding:12px 14px;background:#F3F4F6;border:1.5px solid #E5E7EB;border-left:none;border-radius:0 10px 10px 0;font-size:14px;color:#6B7280;font-weight:500}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.toolbar .name-row{flex:1}
+.toolbar .btn-preview{padding:8px 16px;border:1.5px solid #2D8B46;border-radius:8px;background:#fff;color:#2D8B46;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.toolbar .btn-preview:hover{background:#F0FDF4}
+.toolbar .btn-download{padding:8px 14px;border:none;border-radius:8px;background:#2D8B46;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap;flex:0 0 auto}
+.toolbar .btn-download:hover{background:#246B38}
+.toolbar .btn-deploy{padding:8px 14px;border:none;border-radius:8px;background:#2563EB;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap;flex:0 0 auto}
+.toolbar .btn-deploy:hover{background:#1D4ED8}
+.btn-row{display:flex;gap:10px;margin-top:8px}
+.btn-download{flex:1;padding:14px;border:none;border-radius:10px;background:#2D8B46;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-download:hover{background:#246B38}
+.btn-download:active{transform:scale(0.99)}
+.btn-deploy{flex:1;padding:14px;border:none;border-radius:10px;background:#2563EB;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-deploy:hover{background:#1D4ED8}
+.btn-deploy:active{transform:scale(0.99)}
+.btn-preview{padding:14px 20px;border:1.5px solid #2D8B46;border-radius:10px;background:#fff;color:#2D8B46;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-preview:hover{background:#F0FDF4}
+.main-area{display:flex;gap:16px;align-items:flex-start}
+.left-area{flex:1;min-width:0;max-width:760px;margin:0 auto;transition:all .3s}
+.gen-app.with-preview .left-area{max-width:600px;margin:0}
+.preview-wrap{display:none;flex:1;min-width:0;position:sticky;top:20px}
+.preview-wrap.show{display:block}
+.preview-title{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.preview-close{font-size:12px;color:#9CA3AF;cursor:pointer;text-decoration:underline}
+.preview-frame{width:100%;height:600px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff}
+/* ===== 通用 ===== */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-20px);padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-ok{background:#D1FAE5;color:#059669}
+.toast-err{background:#FEE2E2;color:#DC2626}
+.version-badge{position:fixed;right:10px;bottom:6px;font-size:11px;color:#C0C4CC;user-select:none;z-index:9999}
+@media(max-width:768px){.main-area{flex-direction:column}.gen-app.with-preview{max-width:680px}.gen-app.with-preview .left-area{max-width:100%}.preview-wrap{position:static}.preview-frame{height:400px}}
+</style>
+</head>
+<body>
+<div class="tool-wrap">
+<div class="header">
+<h1>🛠️ HTML 工具箱</h1>
+<p>生成 · 预览 · 一键部署 GitHub Pages</p>
+</div>
+<div class="tabs">
+<button class="tab-btn" id="tabDeployBtn" onclick="switchTab('deploy')">🚀 部署</button>
+<button class="tab-btn active" id="tabGenBtn" onclick="switchTab('gen')">🛠️ 生成</button>
+</div>
+
+<!-- ========== Tab 1: 部署 ========== -->
+<div class="tab-panel" id="panelDeploy">
+<div class="deploy-app col3" id="deployApp">
+<div id="stepBar" class="step-indicator">
+<span class="step step-pending" id="step1">1. Token</span><span class="step-arrow">→</span>
+<span class="step step-pending" id="step2">2. 配置</span><span class="step-arrow">→</span>
+<span class="step step-pending" id="step3">3. 选文件</span><span class="step-arrow">→</span>
+<span class="step step-pending" id="step4">4. 校验</span><span class="step-arrow">→</span>
+<span class="step step-pending" id="step5">5. 部署</span>
+</div>
+<div id="statusBar" class="status-bar status-idle"><span>⏳ 请填写 Token 开始</span></div>
+<div class="cols" id="colsWrap">
+<div class="col"><div class="card"><div class="card-title">⚙️ 部署配置</div>
+<div class="field"><div class="field-label">🔑 GitHub Token</div>
+<input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" />
+<div class="hint">生成：<a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> → 勾选 repo</div>
+<div class="token-ok" id="tokenOk">✅ Token 有效</div></div>
+<div class="field"><div class="field-label">GitHub 用户名 <span class="refresh-btn" id="btnFetchRepos" style="display:none">刷新</span></div>
+<input type="text" id="cfgOwner" placeholder="自动获取" readonly /></div>
+<div class="field"><div class="field-label">仓库</div>
+<select id="cfgRepo" disabled><option>请先输入 Token</option></select></div>
+<div class="field"><div class="field-label">分支</div>
+<select id="cfgBranch" disabled><option>请先选择仓库</option></select></div>
+<div class="field"><div class="field-label">部署文件路径</div>
+<select id="cfgPath" disabled><option>请先选择分支</option></select></div>
+<div class="field"><div class="field-label">Pages 访问地址</div>
+<input type="text" id="cfgPages" placeholder="自动生成" />
+<div class="hint">仓库不存在会自动创建</div></div>
+</div></div>
+<div class="col"><div class="card"><div class="card-title">📦 文件与说明</div>
+<div class="field"><div class="field-label">选择文件</div>
+<div class="file-drop" id="fileDrop"><div class="icon">📁</div><p>点击或拖拽 HTML 文件</p></div>
+<input type="file" id="fileInput" accept=".html" style="display:none" /></div>
+<div class="field"><div class="field-label">文件信息</div>
+<div class="info-card"><span class="label">文件名</span><span class="value" id="infoName">-</span></div>
+<div class="info-card"><span class="label">大小</span><span class="value" id="infoSize">-</span></div>
+<div class="info-card"><span class="label">行数</span><span class="value" id="infoLines">-</span></div>
+<div class="info-card"><span class="label">版本</span><span class="value" id="infoVersion">-</span></div></div>
+<div class="field"><div class="field-label">部署说明</div>
+<textarea class="commit-input" id="commitMsg" placeholder="本次更新说明..."></textarea></div>
+</div></div>
+<div class="col"><div class="card"><div class="card-title">🔍 校验与部署</div>
+<div class="check-list" id="checks"></div>
+<div class="btn-row">
+<button class="btn btn-secondary" onclick="resetAll()">重置</button>
+<button class="btn btn-primary" id="deployBtn" disabled onclick="startDeploy()">🚀 确认部署</button>
+</div></div></div>
+<div class="col col-deploy" id="colDeploy"><div class="card"><div class="card-title">📋 部署日志</div>
+<div class="log show" id="logBox" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden"></div>
+<div style="text-align:center;font-size:11px;color:#9CA3AF;margin-top:8px">Pages 1-2 分钟自动更新</div>
+</div></div>
+</div>
+</div>
+</div>
+
+<!-- ========== Tab 2: 生成 ========== -->
+<div class="tab-panel active" id="panelGen">
+<div class="gen-app" id="genApp">
+<div class="gen-steps">
+<div class="step"><div class="step-num">1</div><span class="step-text">粘贴代码</span></div>
+<span class="step-arrow">→</span>
+<div class="step"><div class="step-num">2</div><span class="step-text">输入文件名</span></div>
+<span class="step-arrow">→</span>
+<div class="step"><div class="step-num">3</div><span class="step-text">下载或一键部署</span></div>
+</div>
+<div class="main-area">
+<div class="left-area">
+<div class="toolbar">
+<div class="name-row">
+<input type="text" class="name-input" id="fileName" placeholder="输入文件名" spellcheck="false" />
+<span class="ext">.html</span>
+</div>
+<button class="btn-preview" onclick="togglePreview()">👁️ 预览</button>
+<button class="btn-download" onclick="downloadHTML()">⬇️ 下载</button>
+<button class="btn-deploy" onclick="oneClickDeploy()">🚀 一键部署</button>
+</div>
+<div class="form-group">
+<label class="form-label">📝 HTML 代码</label>
+<textarea class="code-input" id="codeInput" placeholder="在此粘贴你的 HTML 代码..." spellcheck="false"></textarea>
+<div class="form-hint">支持完整 HTML 文档或代码片段；一键部署会把当前代码直接送入部署页</div>
+</div>
+<div class="btn-row">
+<button class="btn btn-deploy" onclick="oneClickDeploy()">🚀 一键部署</button>
+<button class="btn btn-download" onclick="downloadHTML()">⬇️ 下载 HTML</button>
+<button class="btn btn-preview" onclick="togglePreview()">👁️ 预览</button>
+</div>
+</div>
+<div class="preview-wrap" id="previewWrap">
+<div class="preview-title"><span>👁️ 预览效果</span><span class="preview-close" onclick="closePreview()">关闭预览</span></div>
+<iframe class="preview-frame" id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal-card">
+<div class="modal-title" id="modalTitle">提示</div>
+<div class="modal-desc" id="modalDesc"></div>
+<input type="text" class="modal-input" id="modalInput" style="display:none" />
+<div class="modal-btns">
+<button class="modal-btn modal-btn-cancel" id="modalCancel">取消</button>
+<button class="modal-btn modal-btn-ok" id="modalOk">确认</button>
+</div></div></div>
+<div class="version-badge">V1.0.0</div>
+<script>
+console.log('html_tool V1.0.0');
+const CK='github_pages_deploy_v3';
+/* ===== Tab 切换 ===== */
+function switchTab(name){
+  document.getElementById('tabDeployBtn').classList.toggle('active',name==='deploy');
+  document.getElementById('tabGenBtn').classList.toggle('active',name==='gen');
+  document.getElementById('panelDeploy').classList.toggle('active',name==='deploy');
+  document.getElementById('panelGen').classList.toggle('active',name==='gen');
+}
+/* ===== 部署引擎：配置与临时状态 ===== */
+function loadCfg(){try{return JSON.parse(localStorage.getItem(CK)||'{}')}catch{return{}}}
+function saveCfg(c){localStorage.setItem(CK,JSON.stringify(c))}
+const saved=loadCfg();
+let ghToken='',repoList=[],branchList=[],fileList=[];
+let fileContent=null,fileName='',checksPassed=false,pendingAutoMatch=null;
+function markStep(n){for(let i=1;i<=5;i++){const el=document.getElementById('step'+i);if(i<n)el.className='step step-done';else if(i===n)el.className='step step-current';else el.className='step step-pending'}}
+function setStatus(c,t,sp){const b=document.getElementById('statusBar');b.className='status-bar '+c;b.innerHTML=(sp?'<span class="spinner"><\/span>':'')+t}
+function log(m,t){const b=document.getElementById('logBox');const l=document.createElement('div');l.className='line log-'+(t||'info');l.textContent=m;b.appendChild(l);b.scrollTop=b.scrollHeight}
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+type+' show';setTimeout(()=>t.classList.remove('show'),2000)}
+let modalCallback=null;
+function showModal(title,desc,callback,showInput,inputPlaceholder){
+  const overlay=document.getElementById('modalOverlay');
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalDesc').textContent=desc||'';
+  const inp=document.getElementById('modalInput');
+  if(showInput){inp.style.display='block';inp.value='';inp.placeholder=inputPlaceholder||''}else{inp.style.display='none'}
+  modalCallback=callback;overlay.classList.add('show');
+  if(showInput){setTimeout(()=>inp.focus(),100)}
+}
+function closeModal(result){document.getElementById('modalOverlay').classList.remove('show');if(modalCallback){modalCallback(result);modalCallback=null}}
+document.getElementById('modalOk').addEventListener('click',()=>{const inp=document.getElementById('modalInput');if(inp.style.display!=='none'){closeModal(inp.value.trim())}else{closeModal(true)}});
+document.getElementById('modalCancel').addEventListener('click',()=>closeModal(null));
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')closeModal(null)});
+document.getElementById('modalInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();closeModal(document.getElementById('modalInput').value.trim())}});
+let tokenTimer=null;
+document.getElementById('githubToken').addEventListener('input',function(){const v=this.value.trim();if(v.length>10){document.getElementById('tokenOk').classList.remove('show');clearTimeout(tokenTimer);tokenTimer=setTimeout(()=>verifyTokenAndFetchRepos(v),600)}});
+async function ghApi(path,method,body){const headers={'Authorization':'token '+ghToken,'Accept':'application/vnd.github.v3+json'};if(method==='PUT'||method==='POST')headers['Content-Type']='application/json';const opts={method:method||'GET',headers};if(body)opts.body=JSON.stringify(body);const r=await fetch('https://api.github.com'+path,opts);const d=await r.json().catch(()=>({}));return{status:r.status,data:d}}
+async function verifyTokenAndFetchRepos(token){ghToken=token;setStatus('status-run','正在验证 Token...',true);try{const r=await ghApi('/user');if(r.status!==200)throw new Error('Token 无效');document.getElementById('cfgOwner').value=r.data.login;setStatus('status-run','正在加载仓库列表...',true);const repoResp=await ghApi('/user/repos?per_page=100&sort=updated&direction=desc');if(repoResp.status===200){repoList=repoResp.data.map(r=>({name:r.name,private:r.private,has_pages:r.has_pages,default_branch:r.default_branch}));renderRepoList();document.getElementById('tokenOk').classList.add('show');document.getElementById('btnFetchRepos').style.display='inline';markStep(2);if(saved.repo&&repoList.find(r=>r.name===saved.repo)){document.getElementById('cfgRepo').value=saved.repo;await onRepoChange()}setStatus('status-ok','✅ Token 有效，已加载 '+repoList.length+' 个仓库')}else{throw new Error('获取仓库列表失败: '+(repoResp.data.message||repoResp.status))}}catch(e){setStatus('status-err','❌ '+e.message);document.getElementById('tokenOk').classList.remove('show')}}
+function renderRepoList(){const sel=document.getElementById('cfgRepo');sel.disabled=false;sel.innerHTML='<option value="">-- 选择仓库 --<\/option>'+repoList.map(r=>'<option value="'+r.name+'">'+r.name+(r.private?' (私有)':'')+(r.has_pages?' · Pages':'')+'<\/option>').join('');sel.innerHTML+='<option value="__new__">+ 新建仓库...<\/option>'}
+document.getElementById('btnFetchRepos').addEventListener('click',()=>verifyTokenAndFetchRepos(ghToken));
+async function onRepoChange(){const sel=document.getElementById('cfgRepo');const repo=sel.value;if(!repo){document.getElementById('cfgBranch').disabled=true;document.getElementById('cfgPath').disabled=true;updatePagesUrl();return}if(repo==='__new__'){showModal('新建仓库','输入新仓库名称：',function(newName){if(newName){setStatus('status-run','正在创建仓库...',true);ghApi('/user/repos','POST',{name:newName,description:'GitHub Pages 网站',auto_init:true,public:true}).then(function(r){if(r.status===201){setStatus('status-ok','✅ 仓库 '+newName+' 已创建');verifyTokenAndFetchRepos(ghToken).then(function(){document.getElementById('cfgRepo').value=newName;onRepoChange()})}else setStatus('status-err','❌ 创建失败: '+(r.data.message||'未知'))})}else{sel.value=''}},true,'仓库名称');updatePagesUrl();return}setStatus('status-run','正在加载分支...',true);const br=await ghApi('/repos/'+document.getElementById('cfgOwner').value+'/'+repo+'/branches?per_page=100');if(br.status===200){branchList=br.data.map(b=>b.name);const brSel=document.getElementById('cfgBranch');brSel.disabled=false;brSel.innerHTML=branchList.map(b=>'<option value="'+b+'">'+b+'<\/option>').join('');const repoInfo=repoList.find(r=>r.name===repo);const defaultBr=saved.branch&&branchList.includes(saved.branch)?saved.branch:(repoInfo?repoInfo.default_branch:'main');if(defaultBr&&branchList.includes(defaultBr))brSel.value=defaultBr;await onBranchChange();setStatus('status-ok','✅ 已加载 '+branchList.length+' 个分支')}else{setStatus('status-warn','⚠️ 获取分支失败');document.getElementById('cfgBranch').disabled=false;document.getElementById('cfgBranch').innerHTML='<option value="main">main<\/option>'}updatePagesUrl()}
+async function onBranchChange(){const repo=document.getElementById('cfgRepo').value;const branch=document.getElementById('cfgBranch').value;if(!repo||!branch){document.getElementById('cfgPath').disabled=true;return}setStatus('status-run','正在加载文件列表...',true);const tree=await ghApi('/repos/'+document.getElementById('cfgOwner').value+'/'+repo+'/git/trees/'+branch+'?recursive=1');if(tree.status===200&&tree.data.tree){fileList=tree.data.tree.filter(f=>f.type==='blob'&&f.path.endsWith('.html')).map(f=>f.path);const pathSel=document.getElementById('cfgPath');pathSel.disabled=false;if(fileList.length===0){pathSel.innerHTML='<option value="index.html">index.html (新文件)<\/option><option value="__custom__">+ 手动输入路径...<\/option>'}else{pathSel.innerHTML=fileList.map(p=>'<option value="'+p+'">'+p+'<\/option>').join('');pathSel.innerHTML+='<option value="__custom__">+ 手动输入路径...<\/option>';if(fileList.includes('index.html'))pathSel.value='index.html';else pathSel.value=fileList[0]}if(saved.path&&fileList.includes(saved.path))pathSel.value=saved.path;setStatus('status-ok','✅ 已加载 '+fileList.length+' 个 HTML 文件')}else{document.getElementById('cfgPath').disabled=false;document.getElementById('cfgPath').innerHTML='<option value="index.html">index.html (新文件)<\/option><option value="__custom__">+ 手动输入路径...<\/option>';setStatus('status-warn','⚠️ 仓库为空或获取失败')}if(pendingAutoMatch){const pm=pendingAutoMatch;pendingAutoMatch=null;autoMatchPath(pm)}saveCurrentConfig()}
+document.getElementById('cfgRepo').addEventListener('change',onRepoChange);
+document.getElementById('cfgBranch').addEventListener('change',onBranchChange);
+document.getElementById('cfgPath').addEventListener('change',function(){if(this.value==='__custom__'){var self=this;showModal('手动输入路径','输入文件路径（例如：tools/my-page.html）：',function(customPath){if(customPath&&customPath.trim()){var exists=false;for(var opt of self.options){if(opt.value===customPath.trim()){exists=true;break}}if(!exists){var opt=document.createElement('option');opt.value=customPath.trim();opt.textContent=customPath.trim()+' (新)';self.insertBefore(opt,self.lastChild)}self.value=customPath.trim()}else{self.value=''}},true,'tools/my-page.html')}saveCurrentConfig()});
+function saveCurrentConfig(){saveCfg({token:ghToken,owner:document.getElementById('cfgOwner').value,repo:document.getElementById('cfgRepo').value,branch:document.getElementById('cfgBranch').value,path:document.getElementById('cfgPath').value,pages:document.getElementById('cfgPages').value})}
+function updatePagesUrl(){const o=document.getElementById('cfgOwner').value.trim(),r=document.getElementById('cfgRepo').value.trim();if(o&&r&&r!=='__new__'){const url='https://'+o.toLowerCase()+'.github.io/'+r+'/';const cur=document.getElementById('cfgPages').value;if(!cur||cur.startsWith('https://'))document.getElementById('cfgPages').value=url}}
+document.getElementById('cfgPages').addEventListener('input',saveCurrentConfig);
+if(saved.token){document.getElementById('githubToken').value=saved.token;verifyTokenAndFetchRepos(saved.token)}
+if(saved.pages)document.getElementById('cfgPages').value=saved.pages;
+const fd=document.getElementById('fileDrop'),fi=document.getElementById('fileInput');
+fd.addEventListener('click',()=>fi.click());
+fd.addEventListener('dragover',e=>{e.preventDefault();fd.classList.add('dragover')});
+fd.addEventListener('dragleave',()=>fd.classList.remove('dragover'));
+fd.addEventListener('drop',e=>{e.preventDefault();fd.classList.remove('dragover');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+fi.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+const ALL_CHECKS=[
+  {n:'HTML 文件结构',t:c=>c.includes('<!DOCTYPE html>')||c.includes('<html')},
+  {n:'包含 JavaScript',t:c=>c.includes('<scr'+'ipt')},
+  {n:'包含样式（CSS）',t:c=>c.includes('<style')||c.includes('<link')},
+  {n:'HTML 闭合标签',t:c=>c.includes('<\/html>')||c.includes('<\/body>')},
+  {n:'JS 语法检查',t:c=>{const lt=String.fromCharCode(60);const re=new RegExp(lt+'script(?:\\s[^>]*)?>([\\s\\S]*?)'+lt+'\\/script>','g');const s=c.match(re)||[];let hasCode=false;for(const x of s){const m=x.match(new RegExp(lt+'script(?:\\s[^>]*)?>([\\s\\S]*?)'+lt+'\\/script>'));const code=m&&m[1]?m[1]:'';if(code.trim().length>50){hasCode=true;let ok=false;try{new Function(code);ok=true}catch(e1){try{new Function('return (async()=>{'+code+'})()');ok=true}catch(e2){try{new Function('return async function(){'+code+'}')();ok=true}catch(e3){window._lastJSCheckError=e3.message}}}if(!ok)return false}}return hasCode||s.length>0}},
+  {n:'Supabase SDK 引入',t:c=>c.includes('supabase-js')&&c.includes('supabase.createClient'),cond:c=>c.includes('supabase')||c.includes('饮食规划')},
+  {n:'云端同步逻辑',t:c=>c.includes('loadFromCloud')&&c.includes('saveAll'),cond:c=>c.includes('supabase')||c.includes('饮食规划')},
+  {n:'拖动同步',t:c=>c.includes('handleFoodDrop'),cond:c=>c.includes('supabase')||c.includes('饮食规划')},
+];
+function renderChecksInitial(){const c=document.getElementById('checks');c.innerHTML='<div class="check-wrap"><\/div>';const wrap=c.querySelector('.check-wrap');ALL_CHECKS.forEach((ck,i)=>{if(ck.cond&&!ck.cond(''))return;const el=document.createElement('div');el.className='check-card';el.innerHTML='<span class="icon">&nbsp;<\/span><span>'+ck.n+'<\/span>';wrap.appendChild(el)})}
+function runChecks(content){const c=document.getElementById('checks');c.innerHTML='<div class="check-wrap"><\/div>';const wrap=c.querySelector('.check-wrap');let allPass=true;const applicable=ALL_CHECKS.filter(ck=>!ck.cond||ck.cond(content));applicable.forEach((ck,i)=>{const el=document.createElement('div');el.className='check-card';el.innerHTML='<span class="icon">&nbsp;<\/span><span>'+ck.n+'<\/span>';wrap.appendChild(el);setTimeout(()=>{const p=ck.t(content);el.className='check-card '+(p?'ok':'fail');el.querySelector('.icon').textContent=p?'✅':'❌';if(!p){allPass=false;if(ck.n==='JS 语法检查'&&window._lastJSCheckError){el.querySelector('span').textContent=ck.n+': '+window._lastJSCheckError.substring(0,60)}}if(i===applicable.length-1){markStep(4);if(allPass){setStatus('status-ok','✅ 校验通过，可以部署');document.getElementById('deployBtn').disabled=false;checksPassed=true}else{setStatus('status-err','❌ 校验失败，请修复后再部署');document.getElementById('deployBtn').disabled=true}}},50*(i+1))})}
+renderChecksInitial();
+function autoMatchPath(uploadName){const pathSel=document.getElementById('cfgPath');if(pathSel.disabled)return;const baseName=uploadName.replace(/_?V\d+\.\d+(?:\.\d+)?\.html$/i,'.html').replace(/_?V\d+\.html$/i,'.html');if(fileList.includes(baseName)){pathSel.value=baseName;setStatus('status-ok','✅ 已自动匹配路径: '+baseName);return}const prefix=baseName.replace(/\.html$/i,'');const matched=fileList.find(p=>p.includes(prefix));if(matched){pathSel.value=matched;setStatus('status-ok','✅ 已自动匹配路径: '+matched);return}showModal('创建新文件','未匹配到已有文件，是否自动创建 '+baseName+' ？',function(shouldCreate){if(shouldCreate){var exists=false;for(var opt of pathSel.options){if(opt.value===baseName){exists=true;break}}if(!exists){var opt=document.createElement('option');opt.value=baseName;opt.textContent=baseName+' (新)';pathSel.insertBefore(opt,pathSel.lastChild)}pathSel.value=baseName;setStatus('status-warn','⚠️ 将创建新文件: '+baseName)}else{pathSel.value=pathSel.options[0].value;setStatus('status-warn','请手动选择部署路径')}})}
+/* 统一的内容载入入口：磁盘拖文件 与 生成器一键部署 共用 */
+function loadContent(content,name){
+  fileName=name;fileContent=content;checksPassed=false;
+  document.getElementById('deployBtn').disabled=true;
+  const sz=(content.length/1024).toFixed(1),ln=content.split('\n').length,vm=content.match(/V(\d+\.\d+(?:\.\d+)?)/),ver=vm?'V'+vm[1]:'未检测到';
+  const setVal=(id,v)=>{const el=document.getElementById(id);el.textContent=v;el.classList.add('filled')};
+  setVal('infoName',name);setVal('infoSize',sz+' KB');setVal('infoLines',ln+' 行');setVal('infoVersion',ver);
+  document.getElementById('commitMsg').value=ver+'：';
+  autoMatchPath(name);markStep(3);runChecks(content);
+}
+function handleFile(f){if(!f.name.endsWith('.html')){showModal('提示','请选择 HTML 文件',()=>{});return}setStatus('status-warn','正在读取文件...');const r=new FileReader();r.onload=function(e){loadContent(e.target.result,f.name)};r.readAsText(f)}
+function startDeploy(){document.getElementById('logBox').innerHTML='';document.getElementById('colDeploy').classList.add('show');document.getElementById('deployApp').className='deploy-app col4';deploy()}
+async function deploy(){if(!checksPassed||!fileContent)return;const owner=document.getElementById('cfgOwner').value.trim(),repo=document.getElementById('cfgRepo').value.trim();const path=document.getElementById('cfgPath').value.trim()||'index.html',branch=document.getElementById('cfgBranch').value.trim()||'main';const pagesUrl=document.getElementById('cfgPages').value.trim(),msg=document.getElementById('commitMsg').value.trim()||'部署更新';if(!ghToken){showModal('提示','请填写 GitHub Token',()=>{});return}if(!owner||!repo||repo==='__new__'){showModal('提示','请选择仓库',()=>{});return}saveCurrentConfig();markStep(5);setStatus('status-run','🚀 正在部署...',true);document.getElementById('deployBtn').disabled=true;log('🚀 开始部署...','info');log('文件: '+fileName,'info');log('说明: '+msg,'info');log('目标: '+owner+'/'+repo+'/'+path+' ('+branch+')','info');log('','info');try{log('📡 检查仓库 '+owner+'/'+repo+'...','info');let repoResp=await ghApi('/repos/'+owner+'/'+repo);if(repoResp.status===404){log('📦 仓库不存在，正在创建...','warn');const cr=await ghApi('/user/repos','POST',{name:repo,description:'GitHub Pages 网站',auto_init:true,public:true});if(cr.status===201){log('✅ 仓库创建成功','ok');await new Promise(r=>setTimeout(r,2000))}else throw new Error('创建仓库失败: '+(cr.data.message||cr.status))}else if(repoResp.status===200)log('✅ 仓库已存在','ok');else throw new Error('检查仓库失败: '+(repoResp.data.message||repoResp.status));log('📡 检查 GitHub Pages 设置...','info');const pr=await ghApi('/repos/'+owner+'/'+repo+'/pages');if(pr.status===404){log('⚙️ 启用 GitHub Pages...','warn');const er=await ghApi('/repos/'+owner+'/'+repo+'/pages','POST',{source:{branch:branch,path:'/'}});if(er.status===201)log('✅ GitHub Pages 已启用','ok');else if(er.status===409)log('ℹ️ Pages 可能已在启用中','warn');else log('⚠️ 启用 Pages: '+(er.data.message||'未知'),'warn')}else if(pr.status===200)log('✅ GitHub Pages 已启用','ok');else log('⚠️ Pages 检查: HTTP '+pr.status,'warn');const apiBase='/repos/'+owner+'/'+repo+'/contents/'+encodeURIComponent(path);log('📡 获取文件信息...','info');let sha=null;const gr=await ghApi(apiBase+'?ref='+branch);if(gr.status===200){sha=gr.data.sha;log('✅ 找到已有文件 (SHA: '+sha.substring(0,8)+')','ok')}else if(gr.status===404)log('ℹ️ 新文件，将创建','warn');else throw new Error('获取失败: '+(gr.data.message||gr.status));const b64=btoa(unescape(encodeURIComponent(fileContent)));log('✅ 文件已编码 ('+(b64.length/1024).toFixed(1)+' KB)','ok');log('🚀 推送到 GitHub...','info');const pr2=await ghApi(apiBase,'PUT',{message:msg,content:b64,branch,sha});if(pr2.status===200||pr2.status===201){log('✅ 推送成功！','ok');log('📝 Commit: '+pr2.data.commit.sha.substring(0,8),'ok');log('','info');const fullUrl=pagesUrl||('https://'+owner.toLowerCase()+'.github.io/'+repo+'/');const accessUrl=fullUrl.replace(/\/$/,'')+'/'+path;setStatus('status-ok','✅ 部署成功！ <a href="'+accessUrl+'" target="_blank" style="color:inherit;text-decoration:underline;">'+accessUrl+'</a>');log('🌐 访问地址: '+accessUrl,'ok');log('⏳ GitHub Pages 1-2 分钟后自动更新','info');log('','info');log('🎉 部署完成！','ok');document.getElementById('step5').className='step step-success'}else throw new Error(pr2.data.message||('HTTP '+pr2.status))}catch(e){log('❌ 部署失败: '+e.message,'err');if(e.message.includes('Bad credentials')){log('Token 无效或已过期','warn');log('https://github.com/settings/tokens','warn')}else if(e.message.includes('Not Found')){log('仓库不存在或 Token 没有 repo 权限','warn');log('1. 确认仓库已创建','warn');log('2. 确认 Token 勾选了 repo 权限','warn')}setStatus('status-err','❌ 部署失败，查看日志');document.getElementById('step5').className='step step-error';document.getElementById('deployBtn').disabled=false}}
+function resetAll(){fileContent=null;fileName='';checksPassed=false;document.getElementById('fileInput').value='';['infoName','infoSize','infoLines','infoVersion'].forEach(id=>{const el=document.getElementById(id);el.textContent='-';el.classList.remove('filled')});document.getElementById('deployBtn').disabled=true;document.getElementById('logBox').innerHTML='';document.getElementById('colDeploy').classList.remove('show');document.getElementById('deployApp').className='deploy-app col3';document.getElementById('commitMsg').value='';renderChecksInitial();markStep(ghToken?2:1);setStatus('status-idle','⏳ 等待选择文件')} 
+markStep(1);
+/* ===== 生成器 ===== */
+function togglePreview(){
+  const code=document.getElementById('codeInput').value;
+  if(!code.trim()){showToast('请先粘贴代码','err');return}
+  const wrap=document.getElementById('previewWrap');
+  if(wrap.classList.contains('show')){
+    closePreview();
+  }else{
+    document.getElementById('preview').srcdoc=code;
+    wrap.classList.add('show');
+    document.getElementById('genApp').classList.add('with-preview');
+  }
+}
+function closePreview(){
+  document.getElementById('previewWrap').classList.remove('show');
+  document.getElementById('preview').srcdoc='';
+  document.getElementById('genApp').classList.remove('with-preview');
+}
+function downloadHTML(){
+  const code=document.getElementById('codeInput').value;
+  const name=document.getElementById('fileName').value.trim();
+  if(!code.trim()){showToast('请先粘贴代码','err');return}
+  if(!name){showToast('请输入文件名','err');return}
+  let cleanName=name.replace(/[\\/:*?"<>|]/g,'').replace(/\.html?$/i,'').trim();
+  if(!cleanName){showToast('文件名无效','err');return}
+  const blob=new Blob([code],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=cleanName+'.html';a.click();
+  URL.revokeObjectURL(url);
+  showToast(cleanName+'.html 已下载','ok');
+}
+/* ===== 一键部署：生成内容直送部署引擎 ===== */
+function oneClickDeploy(){
+  const code=document.getElementById('codeInput').value;
+  const name=document.getElementById('fileName').value.trim();
+  if(!code.trim()){showToast('请先粘贴代码','err');return}
+  if(!name){showToast('请输入文件名','err');return}
+  let cleanName=name.replace(/[\\/:*?"<>|]/g,'').replace(/\.html?$/i,'').trim();
+  if(!cleanName){showToast('文件名无效','err');return}
+  if(!ghToken){showToast('请先在部署页填写 Token','err');switchTab('deploy');return}
+  switchTab('deploy');
+  setStatus('status-run','🚀 正在把生成内容送入部署引擎...',true);
+  const needLoad=document.getElementById('cfgPath').disabled;
+  if(needLoad&&saved.repo){pendingAutoMatch=cleanName+'.html';applySavedRepoSelection();return}
+  loadContent(code,cleanName+'.html');
+}
+async function applySavedRepoSelection(){
+  if(!saved.repo||!repoList.length){loadContent(document.getElementById('codeInput').value,(document.getElementById('fileName').value.trim()||'page')+'.html');return}
+  const sel=document.getElementById('cfgRepo');sel.value=saved.repo;
+  await onRepoChange();
+  const code=document.getElementById('codeInput').value;
+  const name=document.getElementById('fileName').value.trim();
+  const cleanName=name.replace(/[\\/:*?"<>|]/g,'').replace(/\.html?$/i,'').trim()||'page';
+  loadContent(code,cleanName+'.html');
+}
+document.getElementById('codeInput').addEventListener('keydown',function(e){
+  if(e.key==='Tab'){e.preventDefault();const s=this.selectionStart,en=this.selectionEnd;this.value=this.value.substring(0,s)+'  '+this.value.substring(en);this.selectionStart=this.selectionEnd=s+2}
+});
+document.getElementById('fileName').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();downloadHTML()}
+});
+</script>
+<script type="text/javascript" src="/accessproxy_statics/h5_fp.js" defer></script>
+<script type="text/javascript" src="/accessproxy_statics/wm.js" defer></script>
+</body>
+</html>
