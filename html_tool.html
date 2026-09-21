@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>🛠️ HTML 工具箱 V1.1.0</title>
+<title>🛠️ HTML 工具箱 V1.2.0</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
 body{background:#F5F7FA;color:#1A1A2E;min-height:100vh;display:flex;justify-content:center;padding:20px}
@@ -12,7 +12,7 @@ body{background:#F5F7FA;color:#1A1A2E;min-height:100vh;display:flex;justify-cont
 .header h1{font-size:24px;color:#2D8B46;margin-bottom:6px}
 .header p{font-size:13px;color:#6B7280}
 .tabs{display:flex;justify-content:center;gap:10px;margin-bottom:16px}
-.tab-btn{padding:10px 24px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;color:#6B7280;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.tab-btn{padding:9px 36px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;color:#6B7280;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
 .tab-btn:hover{border-color:#2D8B46;color:#2D8B46}
 .tab-btn.active{background:#2D8B46;border-color:#2D8B46;color:#fff}
 .tab-panel{display:none}
@@ -106,7 +106,7 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 .gen-steps .step-num{width:28px;height:28px;border-radius:50%;background:#2D8B46;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .gen-steps .step-text{font-size:13px;color:#374151;margin-left:8px;white-space:nowrap}
 .gen-steps .step-arrow{color:#D1D5DB;margin:0 12px;font-size:14px}
-.form-group{margin-bottom:20px;flex:1;display:flex;flex-direction:column}
+.form-group{margin-bottom:20px}
 .form-label{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;display:block;flex-shrink:0}
 .form-hint{font-size:12px;color:#9CA3AF;margin-top:4px;flex-shrink:0}
 .code-input{width:100%;height:480px;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:vertical;outline:none;tab-size:2;line-height:1.6;background:#FAFAFA;color:#1A1A2E;transition:border-color .2s,background .2s;flex:1;min-height:380px}
@@ -134,14 +134,14 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 .btn-deploy:active{transform:scale(0.99)}
 .btn-preview{padding:14px 20px;border:1.5px solid #2D8B46;border-radius:10px;background:#fff;color:#2D8B46;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s}
 .btn-preview:hover{background:#F0FDF4}
-.main-area{display:flex;gap:16px;align-items:stretch}
-.left-area{flex:1;min-width:0;max-width:760px;margin:0 auto;transition:all .3s;display:flex;flex-direction:column}
+.main-area{display:flex;gap:16px;align-items:flex-start}
+.left-area{flex:1;min-width:0;max-width:760px;margin:0 auto;transition:all .3s}
 .gen-app.with-preview .left-area{max-width:600px;margin:0}
 .preview-wrap{display:none;flex:1;min-width:0;position:sticky;top:20px}
 .preview-wrap.show{display:flex;flex-direction:column}
 .preview-title{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;flex-shrink:0;display:flex;justify-content:space-between;align-items:center}
 .preview-close{font-size:12px;color:#9CA3AF;cursor:pointer;text-decoration:underline}
-.preview-frame{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;flex:1;min-height:0}
+.preview-frame{width:100%;height:480px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;flex:none}
 .name-input{width:100%;padding:12px 14px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:14px;outline:none;transition:border-color .2s}
 .name-input:focus{border-color:#2D8B46}
 .name-row{display:flex;align-items:center;gap:0}
@@ -188,8 +188,8 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <p>生成 · 预览 · 一键部署 GitHub Pages</p>
 </div>
 <div class="tabs">
-<button class="tab-btn" id="tabDeployBtn" onclick="switchTab('deploy')">🚀 部署</button>
-<button class="tab-btn active" id="tabGenBtn" onclick="switchTab('gen')">🛠️ 生成</button>
+<button class="tab-btn" id="tabDeployBtn" onclick="switchTab('deploy')">🗂️ 部署工具</button>
+<button class="tab-btn active" id="tabGenBtn" onclick="switchTab('gen')">🛠️ 生成工具</button>
 </div>
 
 <!-- ========== Tab 1: 部署 ========== -->
@@ -257,8 +257,6 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <span class="step-arrow">→</span>
 <div class="step"><div class="step-num">3</div><span class="step-text">下载或一键部署</span></div>
 </div>
-<div class="main-area">
-<div class="left-area">
 <div class="toolbar">
 <div class="name-row">
 <input type="text" class="name-input" id="fileName" placeholder="输入文件名" spellcheck="false" />
@@ -268,6 +266,8 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <button class="btn-download" onclick="downloadHTML()">⬇️ 下载</button>
 <button class="btn-deploy" onclick="oneClickDeploy()">🚀 一键部署</button>
 </div>
+<div class="main-area">
+<div class="left-area">
 <div class="form-group">
 <div class="form-label">📝 HTML 代码</div>
 <textarea class="code-input" id="codeInput" placeholder="在此粘贴你的 HTML 代码..." spellcheck="false"></textarea>
@@ -292,9 +292,9 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <button class="modal-btn modal-btn-cancel" id="modalCancel">取消</button>
 <button class="modal-btn modal-btn-ok" id="modalOk">确认</button>
 </div></div></div>
-<div class="version-badge">V1.1.0</div>
+<div class="version-badge">V1.2.0</div>
 <script>
-console.log('html_tool V1.1.0');
+console.log('html_tool V1.2.0');
 const CK='github_pages_deploy_v3';
 /* ===== Tab 切换 ===== */
 function switchTab(name){
