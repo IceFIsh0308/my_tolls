@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>🛠️ HTML 工具箱 V1.0.0</title>
+<title>🛠️ HTML 工具箱 V1.1.0</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
 body{background:#F5F7FA;color:#1A1A2E;min-height:100vh;display:flex;justify-content:center;padding:20px}
@@ -106,11 +106,42 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 .gen-steps .step-num{width:28px;height:28px;border-radius:50%;background:#2D8B46;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .gen-steps .step-text{font-size:13px;color:#374151;margin-left:8px;white-space:nowrap}
 .gen-steps .step-arrow{color:#D1D5DB;margin:0 12px;font-size:14px}
-.form-group{margin-bottom:20px}
-.form-label{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;display:block}
-.form-hint{font-size:12px;color:#9CA3AF;margin-top:4px}
-.code-input{width:100%;height:480px;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:vertical;outline:none;tab-size:2;line-height:1.6;background:#FAFAFA;color:#1A1A2E;transition:border-color .2s,background .2s}
+.form-group{margin-bottom:20px;flex:1;display:flex;flex-direction:column}
+.form-label{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;display:block;flex-shrink:0}
+.form-hint{font-size:12px;color:#9CA3AF;margin-top:4px;flex-shrink:0}
+.code-input{width:100%;height:480px;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:vertical;outline:none;tab-size:2;line-height:1.6;background:#FAFAFA;color:#1A1A2E;transition:border-color .2s,background .2s;flex:1;min-height:380px}
 .code-input:focus{border-color:#2D8B46;background:#fff}
+.name-input{width:100%;padding:12px 14px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:14px;outline:none;transition:border-color .2s}
+.name-input:focus{border-color:#2D8B46}
+.name-row{display:flex;align-items:center;gap:0}
+.name-row .name-input{flex:1;border-radius:10px 0 0 10px}
+.name-row .ext{padding:12px 14px;background:#F3F4F6;border:1.5px solid #E5E7EB;border-left:none;border-radius:0 10px 10px 0;font-size:14px;color:#6B7280;font-weight:500}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.toolbar .name-row{flex:1}
+.toolbar .btn-preview{padding:8px 16px;border:1.5px solid #2D8B46;border-radius:8px;background:#fff;color:#2D8B46;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.toolbar .btn-preview:hover{background:#F0FDF4}
+.toolbar .btn-download{padding:8px 14px;border:none;border-radius:8px;background:#2D8B46;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap;flex:0 0 auto}
+.toolbar .btn-download:hover{background:#246B38}
+.toolbar .btn-deploy{padding:8px 14px;border:none;border-radius:8px;background:#2563EB;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap;flex:0 0 auto}
+.toolbar .btn-deploy:hover{background:#1D4ED8}
+.btn-row{display:flex;gap:10px;margin-top:8px}
+.btn-row .btn{flex:1}
+.btn-download{flex:1;padding:14px;border:none;border-radius:10px;background:#2D8B46;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-download:hover{background:#246B38}
+.btn-download:active{transform:scale(0.99)}
+.btn-deploy{flex:1;padding:14px;border:none;border-radius:10px;background:#2563EB;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-deploy:hover{background:#1D4ED8}
+.btn-deploy:active{transform:scale(0.99)}
+.btn-preview{padding:14px 20px;border:1.5px solid #2D8B46;border-radius:10px;background:#fff;color:#2D8B46;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-preview:hover{background:#F0FDF4}
+.main-area{display:flex;gap:16px;align-items:stretch}
+.left-area{flex:1;min-width:0;max-width:760px;margin:0 auto;transition:all .3s;display:flex;flex-direction:column}
+.gen-app.with-preview .left-area{max-width:600px;margin:0}
+.preview-wrap{display:none;flex:1;min-width:0;position:sticky;top:20px}
+.preview-wrap.show{display:flex;flex-direction:column}
+.preview-title{font-size:14px;font-weight:600;color:#374151;margin-bottom:8px;flex-shrink:0;display:flex;justify-content:space-between;align-items:center}
+.preview-close{font-size:12px;color:#9CA3AF;cursor:pointer;text-decoration:underline}
+.preview-frame{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;flex:1;min-height:0}
 .name-input{width:100%;padding:12px 14px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:14px;outline:none;transition:border-color .2s}
 .name-input:focus{border-color:#2D8B46}
 .name-row{display:flex;align-items:center;gap:0}
@@ -238,18 +269,13 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <button class="btn-deploy" onclick="oneClickDeploy()">🚀 一键部署</button>
 </div>
 <div class="form-group">
-<label class="form-label">📝 HTML 代码</label>
+<div class="form-label">📝 HTML 代码</div>
 <textarea class="code-input" id="codeInput" placeholder="在此粘贴你的 HTML 代码..." spellcheck="false"></textarea>
 <div class="form-hint">支持完整 HTML 文档或代码片段；一键部署会把当前代码直接送入部署页</div>
 </div>
-<div class="btn-row">
-<button class="btn btn-deploy" onclick="oneClickDeploy()">🚀 一键部署</button>
-<button class="btn btn-download" onclick="downloadHTML()">⬇️ 下载 HTML</button>
-<button class="btn btn-preview" onclick="togglePreview()">👁️ 预览</button>
-</div>
 </div>
 <div class="preview-wrap" id="previewWrap">
-<div class="preview-title"><span>👁️ 预览效果</span><span class="preview-close" onclick="closePreview()">关闭预览</span></div>
+<div class="preview-title"><span>👁️ 预览效果</span><span class="preview-close" onclick="closePreview()">关闭</span></div>
 <iframe class="preview-frame" id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
 </div>
@@ -266,9 +292,9 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <button class="modal-btn modal-btn-cancel" id="modalCancel">取消</button>
 <button class="modal-btn modal-btn-ok" id="modalOk">确认</button>
 </div></div></div>
-<div class="version-badge">V1.0.0</div>
+<div class="version-badge">V1.1.0</div>
 <script>
-console.log('html_tool V1.0.0');
+console.log('html_tool V1.1.0');
 const CK='github_pages_deploy_v3';
 /* ===== Tab 切换 ===== */
 function switchTab(name){
