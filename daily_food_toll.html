@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.37</title>
+    <title>智能饮食规划器 V3.3.38</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -34,7 +34,7 @@
         .row-bottom { display: flex; gap: 12px; align-items: stretch; }
         .row-bottom .card { min-width: 0; }
         .row-bottom .card-left { flex: 4; min-width: 0; }
-        .row-bottom .card-center { flex: 1.5; min-width: 300px; }
+        .row-bottom .card-center { flex: 3; min-width: 300px; }
         .row-bottom .card-right { flex: 3; min-width: 0; }
 
         .card { background: var(--card); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow); }
@@ -220,6 +220,7 @@
         .hist-table-wrap { max-height: 180px; overflow-y: auto; }
         .hist-table { width: 100%; font-size: 11px; border-collapse: collapse; white-space: nowrap; }
         .hist-table th, .hist-table td { padding: 3px 5px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+        .hist-avg { font-size: 11px; font-weight: 600; background: #F3F4F6; border-top: 2px solid var(--border); padding: 3px 5px; white-space: nowrap; }
         .hist-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); position: sticky; top: 0; z-index: 2; }
         .hist-table .deficit-ok { color: var(--primary); }
         .hist-table .deficit-over { color: #DC2626; }
@@ -478,6 +479,7 @@
                     <tbody id="histBody"></tbody>
                 </table>
             </div>
+            <div class="hist-avg" id="histAvgBar" style="display:none;"></div>
             
         </div>
 
@@ -702,7 +704,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.37</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.38</div>
 
 <script>
     // ============================================================
@@ -2973,14 +2975,14 @@
                 validEntries.push({ date, total, target, tdee, deficit });
             }
         }
-        // 默认取最近9条；如果有自定义日期范围则按范围过滤
+        // 默认取最近15天；如果有自定义日期范围则按范围过滤
         let start = document.getElementById('histStart').value;
         let end = document.getElementById('histEnd').value;
         let filtered;
         if (start || end) {
             filtered = validEntries.filter(e => (!start || e.date >= start) && (!end || e.date <= end));
         } else {
-            filtered = validEntries.slice(0, 9);
+            filtered = validEntries.slice(0, 15);
         }
         if (histSortOrder === 'desc') { /* filtered already desc */ }
         else { filtered = filtered.slice().reverse(); }
@@ -2992,13 +2994,18 @@
             html += `<tr class="data-row" data-date="${e.date}"><td>${e.date}</td><td>${getWeekdayCN(e.date)}</td><td>${Math.round(e.total.calories)}</td><td>${e.target}</td><td class="${cls}">${deficitStr}</td><td class="nutrient-td">${Math.round(e.total.carbs)}</td><td class="nutrient-td">${Math.round(e.total.protein)}</td><td class="nutrient-td">${Math.round(e.total.fat)}</td></tr>`;
             totalCal += e.total.calories; totalProtein += e.total.protein; totalCarbs += e.total.carbs; totalFat += e.total.fat; count++;
         });
+        const avgBar = document.getElementById('histAvgBar');
         if (html) {
             const avgCal = count > 0 ? Math.round(totalCal / count) : 0;
             const avgProtein = count > 0 ? Math.round(totalProtein / count) : 0;
             const avgCarbs = count > 0 ? Math.round(totalCarbs / count) : 0;
             const avgFat = count > 0 ? Math.round(totalFat / count) : 0;
-            html += `<tr style="font-weight:600;background:#F3F4F6;"><td>📊 平均</td><td></td><td>${avgCal}</td><td>-</td><td>-</td><td>${avgCarbs}</td><td>${avgProtein}</td><td>${avgFat}</td></tr>`;
-        } else { html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>'; }
+            avgBar.style.display = 'block';
+            avgBar.innerHTML = `📊 平均：${avgCal} 大卡 ｜ 碳水 ${avgCarbs}g ｜ 蛋白质 ${avgProtein}g ｜ 脂肪 ${avgFat}g（${count} 天）`;
+        } else {
+            html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>';
+            avgBar.style.display = 'none';
+        }
         tbody.innerHTML = html;
 
         // 同步渲染历史体重体脂表
@@ -3073,14 +3080,14 @@
         if (typeof updateWeightHistPeriodDisplay === 'function') updateWeightHistPeriodDisplay();
         let start = document.getElementById('weightHistStart').value;
         let end = document.getElementById('weightHistEnd').value;
-        // 默认显示最近9条有效记录（每天一条，优先空腹）
+        // 默认显示最近15天有效记录（每天一条，优先空腹）
         let records;
         if (!start && !end) {
             const allRecs = (weightRecords[user.id] || []).slice().sort((a, b) => b.date.localeCompare(a.date));
             const dateMap = {};
             allRecs.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
-            const recent9 = Object.keys(dateMap).sort().reverse().slice(0, 9);
-            records = recent9.map(d => dateMap[d]);
+            const recent15 = Object.keys(dateMap).sort().reverse().slice(0, 15);
+            records = recent15.map(d => dateMap[d]);
         } else {
             if (!start) { start = getDateDaysAgo(13); }
             if (!end) { end = getToday(); }
@@ -3840,7 +3847,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.37 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.38 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3850,7 +3857,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.37 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.38 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3952,10 +3959,11 @@
         });
 
         // 周期选择器：单框交互，第一次点选开始，第二次点选结束
-        function setupPeriodPicker(startId, endId, displayId) {
+        function setupPeriodPicker(startId, endId, displayId, wrapId) {
             const startInput = document.getElementById(startId);
             const endInput = document.getElementById(endId);
             const display = document.getElementById(displayId);
+            const wrap = document.getElementById(wrapId);
             let picking = 'start'; // 当前正在选开始还是结束
             function updateDisplay() {
                 const s = startInput.value, e = endInput.value;
@@ -3965,8 +3973,8 @@
                 } else if (s) { display.textContent = s + ' 至 …'; }
                 else { display.textContent = '全部'; }
             }
-            // 点击框 → 弹出对应input的日历
-            display.addEventListener('click', function() {
+            // 点击框（父级wrap）→ 弹出对应input的日历
+            wrap.addEventListener('click', function() {
                 const target = picking === 'start' ? startInput : endInput;
                 try { target.showPicker(); } catch(err) { target.focus(); }
             });
@@ -3975,7 +3983,7 @@
                 picking = 'end';
                 updateDisplay();
                 // 自动接着选结束
-                setTimeout(function() { try { endInput.showPicker(); } catch(err) {} }, 100);
+                setTimeout(function() { try { endInput.showPicker(); } catch(err) {} }, 150);
             });
             endInput.addEventListener('change', function() {
                 if (endInput.value && startInput.value && endInput.value < startInput.value) {
@@ -3988,8 +3996,8 @@
             // 生成全局更新函数：updateHistPeriodDisplay / updateWeightHistPeriodDisplay
             window['update' + displayId.charAt(0).toUpperCase() + displayId.slice(1)] = updateDisplay;
         }
-        setupPeriodPicker('histStart', 'histEnd', 'histPeriodDisplay');
-        setupPeriodPicker('weightHistStart', 'weightHistEnd', 'weightHistPeriodDisplay');
+        setupPeriodPicker('histStart', 'histEnd', 'histPeriodDisplay', 'histPeriod');
+        setupPeriodPicker('weightHistStart', 'weightHistEnd', 'weightHistPeriodDisplay', 'weightHistPeriod');
 
 
         // 历史体重体脂表查询
@@ -3999,7 +4007,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.37 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.38 事件绑定完成');
     }
 
     // 全局错误捕获
