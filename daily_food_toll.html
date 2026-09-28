@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.51</title>
+    <title>智能饮食规划器 V3.3.52</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -31,7 +31,7 @@
         .row-top .card-body::-webkit-scrollbar { display: none; }
         .row-middle { display: flex; gap: 12px; align-items: stretch; margin-bottom: 16px; }
         .row-middle .card { flex: 1; min-width: 0; }
-        .row-bottom { display: flex; gap: 12px; align-items: stretch; height: calc(100vh - 430px); min-height: 400px; }
+        .row-bottom { display: flex; gap: 12px; align-items: stretch; height: calc((100vh - 430px) / 3); min-height: 220px; }
         .row-bottom .card { min-width: 0; display: flex; flex-direction: column; }
         .row-bottom .card-left { flex: 4; min-width: 0; }
         .row-bottom .card-center { flex: 3; min-width: 300px; }
@@ -203,12 +203,12 @@
         .weight-add-row .w-input { width: 76px; }
         .weight-add-row .w-label { font-size: 11px; color: var(--text-secondary); margin: 0 2px; }
 
-        .weight-chart-container { margin-top: 6px; width: 100%; background: var(--bg); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
-        .weight-chart-block { position: relative; width: 100%; }
-        .weight-chart-block.canvas-weight { height: 100px; }
-        .weight-chart-block.canvas-bodyfat { height: 80px; }
+        .weight-chart-container { margin-top: 6px; width: 100%; background: var(--bg); border-radius: var(--radius-sm); position: relative; overflow: hidden; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        .weight-chart-block { position: relative; width: 100%; flex: 1; min-height: 0; }
+        .weight-chart-block.canvas-weight { border-bottom: 1px dashed var(--border); }
+        .weight-chart-block.canvas-bodyfat { border-top: 1px dashed var(--border); }
         .weight-chart-block canvas { width: 100% !important; height: 100% !important; }
-        .weight-chart-label { font-size: 10px; color: var(--text-secondary); padding: 2px 6px; font-weight: 600; }
+        .weight-chart-label { font-size: 10px; color: var(--text-secondary); padding: 2px 6px; font-weight: 600; flex-shrink: 0; }
 
         .weight-filter { display: flex; gap: 4px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
         .weight-filter .weight-days-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -757,7 +757,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.51</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.52</div>
 
 <script>
     // ============================================================
@@ -3020,7 +3020,8 @@
         const ctx = canvas.getContext('2d');
         const container = document.getElementById(containerId || 'weightChartContainer');
         const width = container.clientWidth || 300;
-        const height = canvasId === 'zoomWeightChart' ? 220 : 100;
+        const block = canvas.closest('.weight-chart-block');
+        const height = canvasId === 'zoomWeightChart' ? 220 : (block ? block.clientHeight : Math.max(60, Math.floor((container.clientHeight || 200) / 2)));
         canvas.width = width * 2;
         canvas.height = height * 2;
         canvas.style.width = width + 'px';
@@ -3108,7 +3109,8 @@
         const ctx = canvas.getContext('2d');
         const container = document.getElementById(containerId || 'weightChartContainer');
         const width = container.clientWidth || 300;
-        const height = canvasId === 'zoomBodyFatChart' ? 140 : 80;
+        const block = canvas.closest('.weight-chart-block');
+        const height = canvasId === 'zoomBodyFatChart' ? 140 : (block ? block.clientHeight : Math.max(60, Math.floor((container.clientHeight || 200) / 2)));
         canvas.width = width * 2;
         canvas.height = height * 2;
         canvas.style.width = width + 'px';
@@ -4162,7 +4164,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.51 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.52 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4172,7 +4174,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.51 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.52 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4339,7 +4341,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.51 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.52 事件绑定完成');
     }
 
     // 全局错误捕获
