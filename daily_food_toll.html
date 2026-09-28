@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.42</title>
+    <title>智能饮食规划器 V3.3.43</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -149,9 +149,10 @@
         .food-item-sm { display: flex; align-items: center; padding: 5px 6px; border-bottom: 1px solid var(--border); font-size: 11px; gap: 4px; cursor: default; background: #fff; border-radius: 4px; margin-bottom: 2px; transition: background 0.2s; position: relative; }
         .food-item-sm .fname { flex: 1 1 0; font-weight: 500; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; text-align: left; }
         .food-item-sm .fweight { font-size: 10px; color: var(--text); white-space: nowrap; flex: 0 0 auto; text-align: right; margin-left: 6px; }
-        .food-item-sm .fi-nuts { display: flex; align-items: center; gap: 2px; font-size: 9px; font-weight: 400; color: var(--text-secondary); opacity: 0.75; flex: 0 0 auto; margin-left: 6px; }
+        .food-item-sm .fi-nuts { display: flex; align-items: center; gap: 2px; font-size: 9px; font-weight: 400; color: var(--text-secondary); flex: 0 0 auto; margin-left: 6px; }
         .food-item-sm .fi-nuts span { display: inline-flex; align-items: center; gap: 1px; white-space: nowrap; }
         .food-item-sm .fi-nuts .fi-ico { flex-shrink: 0; }
+        .food-item-sm .fi-nuts .fi-ico:first-child { margin-right: 2px; }
         .food-item-sm .fi-btn-zone { width: 0; flex-shrink: 0; transition: width 0.15s; display: flex; align-items: center; justify-content: flex-end; overflow: visible; }
         .food-item-sm:hover .fi-btn-zone { width: 20px; }
         .food-item-sm .fdel-x { opacity: 0; position: absolute; right: -2px; top: 50%; transform: translateY(-50%); background: #fff; border: 1px solid var(--border); font-size: 11px; cursor: pointer; color: #DC2626; padding: 0 3px; z-index: 5; line-height: 1.2; border-radius: 4px; transition: opacity 0.15s; }
@@ -707,7 +708,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.42</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.43</div>
 
 <script>
     // ============================================================
@@ -2656,13 +2657,14 @@
         const meals = getCurrentMeals();
         const item = meals[editingFoodMeal][editingFoodIndex];
         if (!item) return;
+        try {
         const name = document.getElementById('editFoodName').value.trim() || item.name;
-        const weight = parseFloat(document.getElementById('editFoodWeight').value);
+        const weightRaw = parseFloat(document.getElementById('editFoodWeight').value);
+        const weight = (!isNaN(weightRaw) && weightRaw > 0) ? weightRaw : (item.weight || item.quantity || 100);
         const unit = document.getElementById('editFoodUnit').value;
         const carbs = parseFloat(document.getElementById('editFoodCarbs').value) || 0;
         const protein = parseFloat(document.getElementById('editFoodProtein').value) || 0;
         const fat = parseFloat(document.getElementById('editFoodFat').value) || 0;
-        if (!weight || weight <= 0) { showToast('⚠️ 请输入有效重量'); return; }
         const isCustom = item.isCustom || (item.id && String(item.id).indexOf('custom_') === 0);
         if (isCustom) {
             // 自定义食物：表单显示的是"当前重量下的营养值"（打开/改重量时已按比例换算）。
@@ -2684,7 +2686,6 @@
                     cf.protein = Math.round(protein * per100 * 10) / 10;
                     cf.carbs = Math.round(carbs * per100 * 10) / 10;
                     cf.fat = Math.round(fat * per100 * 10) / 10;
-                    saveAll();
                     // 云端更新 custom_foods
                     if (isOnlineMode && cf._dbId) {
                         supabaseClient.from('custom_foods').update({
@@ -2706,7 +2707,13 @@
             }).eq('id', item._dbId).then(() => {}).catch(e => console.error('云端更新食物失败:', e));
         }
         saveAll(); renderMeals(); renderAdvice(); renderHistory();
-        showToast('✅ 食物已更新'); closeFoodEditModal();
+        showToast('✅ 食物已更新');
+        } catch(err) {
+            console.error('保存食物失败:', err);
+            showToast('⚠️ 保存出错: ' + (err.message || err));
+        } finally {
+            closeFoodEditModal();
+        }
     }
 
     // ============================================================
@@ -3848,7 +3855,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.42 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.43 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3858,7 +3865,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.42 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.43 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4008,7 +4015,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.42 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.43 事件绑定完成');
     }
 
     // 全局错误捕获
