@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.50</title>
+    <title>智能饮食规划器 V3.3.51</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -194,10 +194,13 @@
 
         .weight-add-row { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
         .weight-add-row input, .weight-add-row select { padding: 4px 6px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; background: var(--bg); outline: none; }
+        .weight-add-row input[type="date"] { -webkit-appearance: none; appearance: none; }
+        .weight-add-row input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+        .weight-add-row input[type="date"]::-webkit-datetime-edit { color: var(--text); }
         .weight-add-row .btn-sm { padding: 4px 10px; font-size: 12px; }
         .weight-filter .btn-sm { padding: 2px 8px; font-size: 10px; }
         .weight-add-row input:focus, .weight-add-row select:focus { border-color: var(--primary); }
-        .weight-add-row .w-input { width: 70px; }
+        .weight-add-row .w-input { width: 76px; }
         .weight-add-row .w-label { font-size: 11px; color: var(--text-secondary); margin: 0 2px; }
 
         .weight-chart-container { margin-top: 6px; width: 100%; background: var(--bg); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
@@ -495,10 +498,8 @@
             <div class="card-body">
                 <div class="weight-add-row">
                     <input type="date" id="weightDate" />
-                    <input type="number" class="w-input" id="weightVal" placeholder="体重" step="0.1" />
-                    <span class="w-label">公斤</span>
-                    <input type="number" class="w-input" id="bodyfatVal" placeholder="体脂" step="0.1" />
-                    <span class="w-label">%</span>
+                    <input type="number" class="w-input" id="weightVal" placeholder="体重(kg)" step="0.1" />
+                    <input type="number" class="w-input" id="bodyfatVal" placeholder="体脂(%)" step="0.1" />
                     <select id="weightTime">
                         <option value="fasting">空腹</option>
                         <option value="morning">早晨</option>
@@ -509,7 +510,8 @@
                 </div>
                 <div class="weight-filter">
                     <span class="text-secondary" style="font-size:10px;margin-left:4px;">(优先空腹) · 双击图表可放大</span>
-                    <input type="number" id="weightDays" value="14" min="3" max="90" style="width:55px;margin-left:auto;" placeholder="天数" title="自定义天数" />
+                    <label for="weightDays" style="margin-left:auto;">展示天数</label>
+                    <input type="number" id="weightDays" value="14" min="3" max="90" style="width:50px;" placeholder="天数" title="自定义天数" />
                 </div>
                 <div class="weight-chart-container" id="weightChartContainer">
                     <div class="weight-chart-label">📈 体重 (kg)</div>
@@ -755,7 +757,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.50</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.51</div>
 
 <script>
     // ============================================================
@@ -4160,7 +4162,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.50 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.51 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4170,7 +4172,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.50 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.51 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4247,6 +4249,11 @@
 
         // 体重图表
         document.getElementById('addWeightBtn').addEventListener('click', addWeightRecord);
+        // 日期输入框（隐藏图标后点击整框打开日历）
+        const wdInput = document.getElementById('weightDate');
+        if (wdInput) {
+            wdInput.addEventListener('click', function() { try { this.showPicker(); } catch (err) { this.focus(); } });
+        }
         // 7天/14天 按钮切换
         document.querySelectorAll('.weight-days-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -4332,7 +4339,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.50 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.51 事件绑定完成');
     }
 
     // 全局错误捕获
