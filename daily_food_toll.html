@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.41</title>
+    <title>智能饮食规划器 V3.3.42</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -16,7 +16,7 @@
             --border: #E5E7EB; --shadow: 0 2px 8px rgba(0,0,0,0.06);
             --radius: 12px; --radius-sm: 8px;
             --protein: #EF4444; --carbs: #F59E0B; --fat: #3B82F6;
-            --module-height: 135px;
+            --module-height: 128px;
         }
         body { background: var(--bg); color: var(--text); padding: 12px; min-height: 100vh; display: flex; justify-content: center; }
         .app { max-width: 1400px; width: 100%; }
@@ -81,11 +81,11 @@
         .user-detail .gap-bad { color: #DC2626; }
         .user-detail .initial-info { font-size: 11px; color: var(--text-secondary); background: var(--card); padding: 2px 8px; border-radius: 12px; display: inline-block; margin-left: 6px; }
 
-        .advice-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; flex: 1; align-items: center; }
-        .advice-grid .macro-box { background: var(--bg); border-radius: var(--radius-sm); padding: 6px 4px; text-align: center; }
-        .advice-grid .macro-box .num { font-size: 16px; font-weight: 700; }
-        .advice-grid .macro-box .label { font-size: 11px; color: var(--text-secondary); }
-        .advice-grid .macro-box .sub { font-size: 10px; color: var(--text-secondary); }
+        .advice-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; flex: 1; align-items: stretch; }
+        .advice-grid .macro-box { background: var(--bg); border-radius: var(--radius-sm); padding: 8px 4px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+        .advice-grid .macro-box .num { font-size: 16px; font-weight: 700; line-height: 1.2; }
+        .advice-grid .macro-box .label { font-size: 11px; color: var(--text-secondary); line-height: 1.3; }
+        .advice-grid .macro-box .sub { font-size: 10px; color: var(--text-secondary); line-height: 1.3; }
         .macro-row { display: flex; gap: 4px; margin-top: 4px; }
         .macro-row .m-item { flex: 1; text-align: center; font-size: 12px; padding: 4px 2px; background: var(--bg); border-radius: var(--radius-sm); }
         .macro-row .m-item .val { font-weight: 600; }
@@ -707,7 +707,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.41</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.42</div>
 
 <script>
     // ============================================================
@@ -3848,7 +3848,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.41 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.42 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3858,7 +3858,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.41 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.42 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4008,7 +4008,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.41 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.42 事件绑定完成');
     }
 
     // 全局错误捕获
