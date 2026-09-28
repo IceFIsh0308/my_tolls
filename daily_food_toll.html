@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.61</title>
+    <title>智能饮食规划器 V3.3.62</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -771,7 +771,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.61</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.62</div>
 
 <script>
     // ============================================================
@@ -1353,6 +1353,126 @@
         { id: 'yogurt_greek', name: '希腊酸奶', calories: 59, protein: 10, carbs: 4, fat: 0.4, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
         { id: 'oil_veg', name: '植物油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
         { id: 'almond', name: '杏仁', calories: 579, protein: 21, carbs: 22, fat: 49, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        // ===== 扩充：肉类 =====
+        { id: 'pork_belly', name: '五花肉（生）', calories: 508, protein: 9, carbs: 0, fat: 53, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'pork_rib', name: '猪排骨', calories: 278, protein: 17, carbs: 0, fat: 23, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'pork_trotter', name: '猪蹄', calories: 260, protein: 22, carbs: 0, fat: 18, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'beef_rib', name: '牛腩', calories: 332, protein: 17, carbs: 0, fat: 29, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'lamb_lean', name: '羊肉（瘦）', calories: 118, protein: 20, carbs: 0, fat: 4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'lamb_rib', name: '羊排', calories: 300, protein: 17, carbs: 0, fat: 25, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'duck_breast', name: '鸭胸肉', calories: 133, protein: 21, carbs: 0, fat: 5, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'goose', name: '鹅肉', calories: 251, protein: 18, carbs: 0, fat: 19, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'turkey', name: '火鸡胸肉', calories: 104, protein: 21, carbs: 0, fat: 1.7, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'shrimp', name: '虾仁', calories: 93, protein: 18, carbs: 2.3, fat: 1.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'prawn', name: '基围虾', calories: 101, protein: 18, carbs: 2.8, fat: 1.4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'crab', name: '螃蟹', calories: 103, protein: 18, carbs: 2.5, fat: 2.6, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'carp', name: '鲤鱼', calories: 109, protein: 18, carbs: 0, fat: 4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'grass_carp', name: '草鱼', calories: 113, protein: 17, carbs: 0, fat: 5, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'crucian', name: '鲫鱼', calories: 108, protein: 17, carbs: 0, fat: 4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cod', name: '鳕鱼', calories: 82, protein: 18, carbs: 0, fat: 0.9, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'tuna', name: '金枪鱼（罐装）', calories: 144, protein: 26, carbs: 0, fat: 2.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'squid', name: '鱿鱼', calories: 84, protein: 16, carbs: 2.9, fat: 1.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'clam', name: '蛤蜊', calories: 62, protein: 10, carbs: 2.8, fat: 1.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oyster', name: '生蚝', calories: 73, protein: 11, carbs: 4, fat: 2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        // ===== 扩充：蛋奶豆制品 =====
+        { id: 'egg_duck', name: '鸭蛋', calories: 180, protein: 13, carbs: 3, fat: 13, defaultUnit: '个', unitWeight: 70, unitType: '个' },
+        { id: 'egg_quail', name: '鹌鹑蛋', calories: 160, protein: 12, carbs: 2, fat: 11, defaultUnit: '个', unitWeight: 10, unitType: '个' },
+        { id: 'soy_milk', name: '豆浆（无糖）', calories: 31, protein: 3, carbs: 1.2, fat: 1.6, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'tofu_dry', name: '豆腐干', calories: 142, protein: 16, carbs: 3, fat: 7, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'tofu_skin', name: '豆腐皮', calories: 262, protein: 24, carbs: 6, fat: 16, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'soybean', name: '黄豆（干）', calories: 390, protein: 35, carbs: 34, fat: 16, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'mung_bean', name: '绿豆（干）', calories: 329, protein: 21, carbs: 62, fat: 0.8, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'milk_skim', name: '脱脂牛奶', calories: 34, protein: 3.4, carbs: 5, fat: 0.3, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'yogurt_flavored', name: '风味酸奶', calories: 90, protein: 2.8, carbs: 13, fat: 2.8, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cheese', name: '奶酪（芝士）', calories: 328, protein: 25, carbs: 3.5, fat: 24, defaultUnit: '克', unitWeight: 20, unitType: '克' },
+        { id: 'milk_powder', name: '奶粉（全脂）', calories: 490, protein: 24, carbs: 39, fat: 26, defaultUnit: '克', unitWeight: 30, unitType: '克' },
+        { id: 'whey', name: '乳清蛋白粉', calories: 400, protein: 80, carbs: 5, fat: 6, defaultUnit: '克', unitWeight: 30, unitType: '克' },
+        // ===== 扩充：主食 =====
+        { id: 'noodle_cooked', name: '面条（熟）', calories: 110, protein: 3.5, carbs: 22, fat: 0.4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'noodle_raw', name: '挂面（干）', calories: 350, protein: 11, carbs: 72, fat: 1.5, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'bun_steamed', name: '馒头', calories: 223, protein: 7, carbs: 47, fat: 1.1, defaultUnit: '个', unitWeight: 100, unitType: '个' },
+        { id: 'baozi', name: '包子（猪肉馅）', calories: 227, protein: 8, carbs: 30, fat: 9, defaultUnit: '个', unitWeight: 80, unitType: '个' },
+        { id: 'dumpling', name: '饺子（猪肉馅）', calories: 240, protein: 9, carbs: 25, fat: 11, defaultUnit: '个', unitWeight: 20, unitType: '个' },
+        { id: 'rice_porridge', name: '白粥', calories: 46, protein: 1.1, carbs: 10, fat: 0.3, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'brown_rice', name: '糙米（熟）', calories: 123, protein: 2.7, carbs: 26, fat: 1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'corn', name: '玉米（鲜）', calories: 112, protein: 4, carbs: 22, fat: 1.2, defaultUnit: '个', unitWeight: 200, unitType: '个' },
+        { id: 'sweet_potato_cooked', name: '红薯（熟）', calories: 90, protein: 1.4, carbs: 21, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'potato_cooked', name: '土豆（熟）', calories: 81, protein: 2, carbs: 18, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'yam', name: '山药', calories: 57, protein: 1.9, carbs: 12, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'taro', name: '芋头', calories: 79, protein: 2.2, carbs: 18, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'pumpkin', name: '南瓜', calories: 23, protein: 0.7, carbs: 5, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'quinoa', name: '藜麦（熟）', calories: 120, protein: 4.4, carbs: 21, fat: 1.9, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oats_cooked', name: '燕麦粥（熟）', calories: 71, protein: 2.5, carbs: 12, fat: 1.5, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'wheat_bread', name: '全麦吐司', calories: 247, protein: 13, carbs: 41, fat: 4.2, defaultUnit: '片', unitWeight: 35, unitType: '片' },
+        { id: 'cracker', name: '苏打饼干', calories: 408, protein: 8, carbs: 76, fat: 7.7, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        // ===== 扩充：蔬菜 =====
+        { id: 'cabbage', name: '大白菜', calories: 18, protein: 1.5, carbs: 3.2, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'bok_choy', name: '小白菜', calories: 17, protein: 1.5, carbs: 2.7, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'lettuce', name: '生菜', calories: 15, protein: 1.3, carbs: 2, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'celery', name: '芹菜', calories: 16, protein: 0.8, carbs: 3, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'broccoli_cooked', name: '西兰花（熟）', calories: 34, protein: 2.4, carbs: 6, fat: 0.4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cauliflower', name: '菜花', calories: 25, protein: 2, carbs: 5, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'eggplant', name: '茄子', calories: 23, protein: 1.1, carbs: 4.9, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'green_pepper', name: '青椒', calories: 22, protein: 1, carbs: 5, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'bell_pepper', name: '彩椒', calories: 26, protein: 1, carbs: 6, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'onion', name: '洋葱', calories: 40, protein: 1.1, carbs: 9, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'garlic', name: '大蒜', calories: 126, protein: 4.5, carbs: 27, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'ginger', name: '生姜', calories: 41, protein: 1.3, carbs: 9, fat: 0.6, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'radish', name: '白萝卜', calories: 16, protein: 0.6, carbs: 4, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'carrot_cooked', name: '胡萝卜（熟）', calories: 35, protein: 0.8, carbs: 8, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'mushroom', name: '香菇', calories: 26, protein: 2.2, carbs: 5, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'enoki', name: '金针菇', calories: 32, protein: 2.4, carbs: 6, fat: 0.4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'seaweed', name: '紫菜（干）', calories: 250, protein: 26, carbs: 44, fat: 1.1, defaultUnit: '克', unitWeight: 10, unitType: '克' },
+        { id: 'kelp', name: '海带', calories: 13, protein: 1.2, carbs: 2.1, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'corn_pea', name: '豌豆', calories: 105, protein: 7, carbs: 21, fat: 0.4, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'green_bean', name: '四季豆', calories: 28, protein: 2, carbs: 5, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cucumber', name: '黄瓜', calories: 16, protein: 0.8, carbs: 2.9, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        // ===== 扩充：水果 =====
+        { id: 'pear', name: '梨', calories: 51, protein: 0.4, carbs: 13, fat: 0.2, defaultUnit: '个', unitWeight: 200, unitType: '个' },
+        { id: 'peach', name: '桃', calories: 42, protein: 0.9, carbs: 10, fat: 0.1, defaultUnit: '个', unitWeight: 180, unitType: '个' },
+        { id: 'plum', name: '李子', calories: 38, protein: 0.7, carbs: 9, fat: 0.2, defaultUnit: '个', unitWeight: 80, unitType: '个' },
+        { id: 'cherry', name: '樱桃', calories: 46, protein: 1.1, carbs: 10, fat: 0.2, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'blueberry', name: '蓝莓', calories: 57, protein: 0.7, carbs: 14, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'kiwi', name: '猕猴桃', calories: 61, protein: 0.8, carbs: 15, fat: 0.6, defaultUnit: '个', unitWeight: 80, unitType: '个' },
+        { id: 'mango', name: '芒果', calories: 60, protein: 0.8, carbs: 15, fat: 0.4, defaultUnit: '个', unitWeight: 200, unitType: '个' },
+        { id: 'pineapple', name: '菠萝', calories: 50, protein: 0.5, carbs: 13, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'dragon_fruit', name: '火龙果', calories: 55, protein: 1.1, carbs: 13, fat: 0.2, defaultUnit: '个', unitWeight: 300, unitType: '个' },
+        { id: 'lychee', name: '荔枝', calories: 71, protein: 0.9, carbs: 17, fat: 0.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'longan', name: '龙眼', calories: 71, protein: 1.2, carbs: 17, fat: 0.1, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'durian', name: '榴莲', calories: 147, protein: 2.6, carbs: 28, fat: 3.3, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'avocado', name: '牛油果', calories: 171, protein: 2, carbs: 8, fat: 15, defaultUnit: '个', unitWeight: 150, unitType: '个' },
+        { id: 'pomegranate', name: '石榴', calories: 72, protein: 1.4, carbs: 19, fat: 0.2, defaultUnit: '个', unitWeight: 250, unitType: '个' },
+        { id: 'persimmon', name: '柿子', calories: 71, protein: 0.4, carbs: 18, fat: 0.2, defaultUnit: '个', unitWeight: 150, unitType: '个' },
+        { id: 'grapefruit', name: '西柚', calories: 33, protein: 0.6, carbs: 8, fat: 0.2, defaultUnit: '个', unitWeight: 200, unitType: '个' },
+        { id: 'lemon', name: '柠檬', calories: 37, protein: 1.1, carbs: 9, fat: 0.3, defaultUnit: '个', unitWeight: 100, unitType: '个' },
+        { id: 'coconut', name: '椰子肉', calories: 354, protein: 3.3, carbs: 15, fat: 33, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        // ===== 扩充：坚果/种子 =====
+        { id: 'walnut', name: '核桃', calories: 646, protein: 15, carbs: 14, fat: 65, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'peanut', name: '花生（熟）', calories: 589, protein: 24, carbs: 21, fat: 48, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cashew', name: '腰果', calories: 559, protein: 18, carbs: 30, fat: 44, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'pistachio', name: '开心果', calories: 560, protein: 20, carbs: 28, fat: 45, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'macadamia', name: '夏威夷果', calories: 718, protein: 8, carbs: 14, fat: 76, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'sunflower_seed', name: '葵花籽', calories: 584, protein: 21, carbs: 20, fat: 51, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'sesame', name: '白芝麻', calories: 559, protein: 19, carbs: 23, fat: 50, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'chia', name: '奇亚籽', calories: 486, protein: 17, carbs: 42, fat: 31, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'pumpkin_seed', name: '南瓜子', calories: 559, protein: 30, carbs: 15, fat: 46, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        // ===== 扩充：零食/饮料/调味 =====
+        { id: 'chocolate_dark', name: '黑巧克力（85%）', calories: 650, protein: 8, carbs: 35, fat: 55, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'chocolate_milk', name: '牛奶巧克力', calories: 535, protein: 7, carbs: 53, fat: 32, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'ice_cream', name: '冰淇淋', calories: 207, protein: 3.5, carbs: 24, fat: 11, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cake', name: '奶油蛋糕', calories: 378, protein: 5, carbs: 48, fat: 18, defaultUnit: '块', unitWeight: 80, unitType: '块' },
+        { id: 'cookie', name: '曲奇饼干', calories: 546, protein: 6, carbs: 58, fat: 32, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'potato_chips', name: '薯片', calories: 536, protein: 7, carbs: 53, fat: 34, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'cola', name: '可乐', calories: 42, protein: 0, carbs: 11, fat: 0, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'orange_juice', name: '橙汁（纯）', calories: 45, protein: 0.7, carbs: 10, fat: 0.2, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'green_tea', name: '绿茶（无糖）', calories: 0, protein: 0, carbs: 0, fat: 0, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'coffee_black', name: '黑咖啡', calories: 1, protein: 0.1, carbs: 0, fat: 0, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'honey', name: '蜂蜜', calories: 321, protein: 0.4, carbs: 80, fat: 0, defaultUnit: '克', unitWeight: 20, unitType: '克' },
+        { id: 'peanut_butter', name: '花生酱', calories: 588, protein: 25, carbs: 20, fat: 50, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'soy_sauce', name: '酱油', calories: 63, protein: 5.6, carbs: 10, fat: 0.1, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'sugar', name: '白砂糖', calories: 400, protein: 0, carbs: 100, fat: 0, defaultUnit: '克', unitWeight: 10, unitType: '克' },
+        { id: 'beer', name: '啤酒', calories: 32, protein: 0.4, carbs: 3.5, fat: 0, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
+        { id: 'red_wine', name: '红葡萄酒', calories: 68, protein: 0.2, carbs: 2.5, fat: 0, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
     ];
 
     // 拼音表：[食物名, 首字母缩写, 完整拼音]
@@ -1378,8 +1498,121 @@
         ['全脂牛奶','qznn','quanzhiniunai'],['牛奶','nn','niunai'],
         ['希腊酸奶','xlsn','xilasuannai'],['酸奶','sn','suannai'],
         ['植物油','zwu','zhiwuyou'],['油','y','you'],['杏仁','xr','xingren'],
-        ['去皮','qp','qupi'],['生','s','sheng'],['熟','sh','shou']
+        ['去皮','qp','qupi'],['生','s','sheng'],['熟','sh','shou'],
+        ['五花肉（生）','whr','wuhuarou'],
+        ['猪排骨','zpg','zhupaigu'],
+        ['猪蹄','zt','zhuti'],
+        ['牛腩','nn','niunan'],
+        ['羊肉（瘦）','yr','yangrou'],
+        ['羊排','yp','yangpai'],
+        ['鸭胸肉','yxr','yaxiongrou'],
+        ['鹅肉','er','erou'],
+        ['火鸡胸肉','hjxr','huojixiongrou'],
+        ['虾仁','xr','xiaren'],
+        ['基围虾','jwx','jiweixia'],
+        ['螃蟹','px','pangxie'],
+        ['鲤鱼','ly','liyu'],
+        ['草鱼','cy','caoyu'],
+        ['鲫鱼','jy','jiyu'],
+        ['鳕鱼','xy','xueyu'],
+        ['金枪鱼（罐装）','jqy','jinqiangyu'],
+        ['鱿鱼','yy','youyu'],
+        ['蛤蜊','gl','geli'],
+        ['生蚝','sh','shenghao'],
+        ['鸭蛋','yd','yadan'],
+        ['鹌鹑蛋','acd','anchundan'],
+        ['豆浆（无糖）','dj','doujiang'],
+        ['豆腐干','dfg','doufugan'],
+        ['豆腐皮','dfp','doufupi'],
+        ['黄豆（干）','hd','huangdou'],
+        ['绿豆（干）','ld','lvdou'],
+        ['脱脂牛奶','tznn','tuozhiniunai'],
+        ['风味酸奶','fwsn','fengweisuannai'],
+        ['奶酪（芝士）','nl','nailao'],
+        ['奶粉（全脂）','nf','naifen'],
+        ['乳清蛋白粉','rqdbf','ruqingdanbaifen'],
+        ['面条（熟）','mt','miantiao'],
+        ['挂面（干）','gm','guamian'],
+        ['馒头','mt','mantou'],
+        ['包子（猪肉馅）','bz','baozi'],
+        ['饺子（猪肉馅）','jz','jiaozi'],
+        ['白粥','bz','baizhou'],
+        ['糙米（熟）','cm','caomi'],
+        ['玉米（鲜）','ym','yumi'],
+        ['红薯（熟）','hs','hongshu'],
+        ['土豆（熟）','td','tudou'],
+        ['山药','sy','shanyao'],
+        ['芋头','yt','yutou'],
+        ['南瓜','ng','nangua'],
+        ['藜麦（熟）','lm','limai'],
+        ['燕麦粥（熟）','ymz','yanmaizhou'],
+        ['全麦吐司','qmts','quanmaitusi'],
+        ['苏打饼干','sdbg','sudabinggan'],
+        ['大白菜','dbc','dabaicai'],
+        ['小白菜','xbc','xiaobaicai'],
+        ['生菜','sc','shengcai'],
+        ['芹菜','qc','qincai'],
+        ['西兰花（熟）','xlh','xilanhua'],
+        ['菜花','ch','caihua'],
+        ['茄子','qz','qiezi'],
+        ['青椒','qj','qingjiao'],
+        ['彩椒','cj','caijiao'],
+        ['洋葱','yc','yangcong'],
+        ['大蒜','ds','dasuan'],
+        ['生姜','sj','shengjiang'],
+        ['白萝卜','blb','bailuobo'],
+        ['胡萝卜（熟）','hlb','huluobo'],
+        ['香菇','xg','xianggu'],
+        ['金针菇','jzg','jinzhengu'],
+        ['紫菜（干）','zc','zicai'],
+        ['海带','hd','haidai'],
+        ['豌豆','wd','wandou'],
+        ['四季豆','sjd','sijidou'],
+        ['梨','l','li'],
+        ['桃','t','tao'],
+        ['李子','lz','lizi'],
+        ['樱桃','yt','yingtao'],
+        ['蓝莓','lm','lanmei'],
+        ['猕猴桃','mht','mihoutao'],
+        ['芒果','mg','mangguo'],
+        ['菠萝','bl','boluo'],
+        ['火龙果','hlg','huolongguo'],
+        ['荔枝','lz','lizhi'],
+        ['龙眼','ly','longyan'],
+        ['榴莲','ll','liulian'],
+        ['牛油果','nyg','niuyouguo'],
+        ['石榴','sl','shiliu'],
+        ['柿子','sz','shizi'],
+        ['西柚','xy','xiyou'],
+        ['柠檬','nm','ningmeng'],
+        ['椰子肉','yzr','yezirou'],
+        ['核桃','ht','hetao'],
+        ['花生（熟）','hs','huasheng'],
+        ['腰果','yg','yaoguo'],
+        ['开心果','kxg','kaixinguo'],
+        ['夏威夷果','xwyg','xiaweiyiguo'],
+        ['葵花籽','khz','kuihuazi'],
+        ['白芝麻','bzm','baizhima'],
+        ['奇亚籽','qyz','qiyazi'],
+        ['南瓜子','ngz','nanguazi'],
+        ['黑巧克力（85%）','hqkl','heiqiaokeli'],
+        ['牛奶巧克力','nnqkl','niunaiqiaokeli'],
+        ['冰淇淋','bql','bingqilin'],
+        ['奶油蛋糕','nydg','naiyoudangao'],
+        ['曲奇饼干','qqbg','quqibinggan'],
+        ['薯片','sp','shupian'],
+        ['可乐','kl','kele'],
+        ['橙汁（纯）','cz','chengzhi'],
+        ['绿茶（无糖）','lc','lvcha'],
+        ['黑咖啡','hkf','heikafei'],
+        ['蜂蜜','fm','fengmi'],
+        ['花生酱','hsj','huashengjiang'],
+        ['酱油','jy','jiangyou'],
+        ['白砂糖','bst','baishatang'],
+        ['啤酒','pj','pijiu'],
+        ['红葡萄酒','hptj','hongputaojiu']
     ];
+
     const PINYIN_MAP = {};
     PINYIN_DATA.forEach(([name, abbr, full]) => {
         if (!PINYIN_MAP[name]) PINYIN_MAP[name] = { abbr, full };
@@ -4230,7 +4463,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.61 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.62 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4240,7 +4473,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.61 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.62 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4408,7 +4641,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.61 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.62 事件绑定完成');
     }
 
     // 全局错误捕获
