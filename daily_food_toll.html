@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.47</title>
+    <title>智能饮食规划器 V3.3.49</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -32,7 +32,7 @@
         .row-middle { display: flex; gap: 12px; align-items: stretch; margin-bottom: 16px; }
         .row-middle .card { flex: 1; min-width: 0; }
         .row-bottom { display: flex; gap: 12px; align-items: stretch; }
-        .row-bottom .card { min-width: 0; }
+        .row-bottom .card { min-width: 0; display: flex; flex-direction: column; }
         .row-bottom .card-left { flex: 4; min-width: 0; }
         .row-bottom .card-center { flex: 3; min-width: 300px; }
         .row-bottom .card-right { flex: 3; min-width: 0; }
@@ -219,7 +219,7 @@
         .period-picker { position: relative; display: inline-flex; align-items: center; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); padding: 2px 8px; cursor: pointer; }
         .period-picker .period-display { font-size: 11px; color: var(--text); white-space: nowrap; pointer-events: none; }
         .period-picker .period-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-        .hist-table-wrap { max-height: 180px; overflow-y: auto; }
+        .hist-table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
         .hist-table { width: 100%; font-size: 11px; border-collapse: collapse; white-space: nowrap; }
         .hist-table th, .hist-table td { padding: 3px 5px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
         .hist-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); position: sticky; top: 0; z-index: 2; }
@@ -440,6 +440,7 @@
                             <button class="dropdown-item" id="downloadDietTemplateBtn">📋 下载模板</button>
                         </div>
                     </div>
+                    <button class="btn btn-outline btn-sm" id="customFoodManagerBtn">🥗 自定义食物</button>
                     <button class="btn btn-outline btn-sm" id="clearTodayBtn">🗑️ 清空</button>
                 </span>
             </div>
@@ -705,12 +706,56 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="customFoodMgrModal">
+    <div class="modal-box" style="max-width:520px;">
+        <h3>🥗 自定义食物管理</h3>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <input type="text" id="cfmSearch" placeholder="🔍 搜索自定义食物..." style="flex:1;padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;" />
+            <button class="btn btn-primary btn-sm" id="cfmAddBtn">➕ 新建</button>
+        </div>
+        <div id="cfmList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="cfmCloseBtn">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 自定义食物编辑弹窗（管理入口） -->
+<div class="modal-overlay" id="customFoodEditModal">
+    <div class="modal-box">
+        <h3>✏️ 编辑自定义食物</h3>
+        <div class="row">
+            <div class="field" style="flex:1;"><label>名称</label><input type="text" id="cfeName" /></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <button class="btn btn-primary btn-sm" style="flex:1;" id="cfeModeNutrient">按营养素计算</button>
+            <button class="btn btn-outline btn-sm" style="flex:1;" id="cfeModeCalorie">直接输入热量</button>
+        </div>
+        <input type="hidden" id="cfeMode" value="nutrient" />
+        <div class="row" id="cfeNutrientRow">
+            <div class="field"><label>碳水(g/100g)</label><input type="number" id="cfeCarbs" step="0.1" /></div>
+            <div class="field"><label>蛋白质(g/100g)</label><input type="number" id="cfeProtein" step="0.1" /></div>
+            <div class="field"><label>脂肪(g/100g)</label><input type="number" id="cfeFat" step="0.1" /></div>
+        </div>
+        <div class="row" id="cfeCalorieRow" style="display:none;">
+            <div class="field" style="flex:1;"><label>热量(大卡/100g)</label><input type="number" id="cfeCalories" step="1" /></div>
+        </div>
+        <div class="row">
+            <div class="field" style="flex:1;"><label>单位类型</label><select id="cfeUnit"><option value="克">克</option><option value="毫升">毫升</option><option value="个">个</option><option value="份">份</option></select></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="cfeCancel">取消</button>
+            <button class="btn-confirm" id="cfeConfirm">保存</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div id="syncWarnBar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fee;border-top:1px solid #e55;color:#c00;padding:6px 12px;font-size:12px;z-index:9999;cursor:pointer;" onclick="document.getElementById('syncWarnDetail').style.display = document.getElementById('syncWarnDetail').style.display==='none'?'block':'none'">
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.47</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.49</div>
 
 <script>
     // ============================================================
@@ -1941,16 +1986,14 @@
                 el.addEventListener('mousedown', function(e) { startX = e.clientX; startY = e.clientY; isDragging = false; });
                 el.addEventListener('mousemove', function(e) { if (startX !== undefined) { const dx = e.clientX - startX; const dy = e.clientY - startY; if (Math.sqrt(dx * dx + dy * dy) > 5) { isDragging = true; } } });
                 el.addEventListener('mouseup', function(e) { startX = startY = undefined; });
-                // 双击：内置食物 inline 改数量；自定义食物弹卡片
+                // 双击：统一只改数量（无论内置/自定义；营养定义修改请走"自定义食物"管理）
                 el.addEventListener('dblclick', function(e) {
                     e.stopPropagation();
                     const meal = el.dataset.meal; const idx = parseInt(el.dataset.idx);
                     const meals = getCurrentMeals();
                     const it = meals[meal] ? meals[meal][idx] : null;
                     if (!it) return;
-                    const isCustom = it.isCustom || (it.id && String(it.id).indexOf('custom_') === 0);
-                    if (isCustom) { openFoodEditModal(meal, idx); }
-                    else { inlineEditFoodQty(meal, idx); }
+                    inlineEditFoodQty(meal, idx);
                 });
             });
             container.querySelectorAll('.fdel-x').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); const meal = this.dataset.meal; const idx = parseInt(this.dataset.idx); showConfirm('删除食物', '确定删除该食物吗？', function(ok) { if (ok) deleteFoodItem(meal, idx); }); }); });
@@ -2629,6 +2672,193 @@
         input.addEventListener('click', function(e) { e.stopPropagation(); });
     }
 
+    // ============================================================
+    //  自定义食物管理（清空按钮旁入口）
+    // ============================================================
+    let cfmEditingFoodId = null;   // 当前编辑的自定义食物 id（null=新建）
+
+    function openCustomFoodMgr() {
+        const user = getCurrentUser();
+        if (!user) { showToast('请先选择用户'); return; }
+        document.getElementById('cfmSearch').value = '';
+        document.getElementById('customFoodMgrModal').classList.add('active');
+        renderCustomFoodMgrList();
+    }
+
+    function renderCustomFoodMgrList() {
+        const user = getCurrentUser();
+        const listEl = document.getElementById('cfmList');
+        if (!user) { listEl.innerHTML = '<div class="text-secondary text-center" style="padding:20px;">请先选择用户</div>'; return; }
+        const foods = customFoods[user.id] || [];
+        const q = (document.getElementById('cfmSearch').value || '').trim().toLowerCase();
+        const filtered = q ? foods.filter(f => (f.name || '').toLowerCase().indexOf(q) >= 0) : foods;
+        if (filtered.length === 0) {
+            listEl.innerHTML = '<div class="text-secondary text-center" style="padding:20px;">' + (q ? '未找到匹配的自定义食物' : '暂无自定义食物，点击右上角 ➕ 新建') + '</div>';
+            return;
+        }
+        let html = '';
+        filtered.forEach(f => {
+            const cal = Math.round(f.calories || 0);
+            html += `<div class="cfm-item" data-id="${f.id}" title="双击编辑" style="display:flex;align-items:center;gap:6px;padding:7px 8px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;">
+                <span style="flex:1;font-weight:500;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
+                <span style="flex:0 0 auto;color:var(--text-secondary);font-size:10px;">${cal} 大卡/100g</span>
+                <span style="flex:0 0 auto;color:var(--text-secondary);font-size:10px;">单位:${f.unitType || '克'}</span>
+            </div>`;
+        });
+        listEl.innerHTML = html;
+        listEl.querySelectorAll('.cfm-item').forEach(el => {
+            el.addEventListener('dblclick', function() {
+                const id = this.dataset.id;
+                const food = (customFoods[user.id] || []).find(f => f.id === id);
+                if (food) openCustomFoodEdit(food);
+            });
+            el.addEventListener('click', function() {
+                listEl.querySelectorAll('.cfm-item').forEach(x => x.style.background = '');
+                this.style.background = 'var(--primary-bg)';
+            });
+        });
+    }
+
+    function switchCfeMode(mode) {
+        document.getElementById('cfeMode').value = mode;
+        if (mode === 'nutrient') {
+            document.getElementById('cfeNutrientRow').style.display = '';
+            document.getElementById('cfeCalorieRow').style.display = 'none';
+            document.getElementById('cfeModeNutrient').className = 'btn btn-primary btn-sm';
+            document.getElementById('cfeModeCalorie').className = 'btn btn-outline btn-sm';
+        } else {
+            document.getElementById('cfeNutrientRow').style.display = 'none';
+            document.getElementById('cfeCalorieRow').style.display = '';
+            document.getElementById('cfeModeNutrient').className = 'btn btn-outline btn-sm';
+            document.getElementById('cfeModeCalorie').className = 'btn btn-primary btn-sm';
+        }
+    }
+
+    function openCustomFoodEdit(food) {
+        cfmEditingFoodId = food ? food.id : null;
+        if (food) {
+            document.getElementById('cfeName').value = food.name || '';
+            document.getElementById('cfeCarbs').value = food.carbs || 0;
+            document.getElementById('cfeProtein').value = food.protein || 0;
+            document.getElementById('cfeFat').value = food.fat || 0;
+            document.getElementById('cfeCalories').value = food.calories || 0;
+            document.getElementById('cfeUnit').value = food.unitType || '克';
+            // 保持原模式：若有碳水则营养素模式
+            const hasNutrient = (food.carbs || food.protein || food.fat);
+            switchCfeMode(hasNutrient ? 'nutrient' : 'calorie');
+        } else {
+            document.getElementById('cfeName').value = '';
+            document.getElementById('cfeCarbs').value = 0;
+            document.getElementById('cfeProtein').value = 0;
+            document.getElementById('cfeFat').value = 0;
+            document.getElementById('cfeCalories').value = 0;
+            document.getElementById('cfeUnit').value = '克';
+            switchCfeMode('nutrient');
+        }
+        document.getElementById('customFoodEditModal').classList.add('active');
+    }
+
+    // 保存自定义食物定义（新建/编辑），并全量重算历史引用条目 + 云端同步
+    function saveCustomFoodEdit() {
+        const user = getCurrentUser();
+        if (!user) { showToast('请先选择用户'); return; }
+        try {
+            const name = document.getElementById('cfeName').value.trim();
+            if (!name) { showToast('⚠️ 请输入食物名称'); return; }
+            const mode = document.getElementById('cfeMode').value;
+            const unit = document.getElementById('cfeUnit').value;
+            let calories, carbs, protein, fat;
+            if (mode === 'calorie') {
+                calories = parseFloat(document.getElementById('cfeCalories').value) || 0;
+                carbs = 0; protein = 0; fat = 0;
+            } else {
+                carbs = parseFloat(document.getElementById('cfeCarbs').value) || 0;
+                protein = parseFloat(document.getElementById('cfeProtein').value) || 0;
+                fat = parseFloat(document.getElementById('cfeFat').value) || 0;
+                calories = Math.round((carbs * 4 + protein * 4 + fat * 9) * 10) / 10;
+                if (calories <= 0 && carbs <= 0 && protein <= 0 && fat <= 0) { showToast('⚠️ 请填写营养值'); return; }
+            }
+            // 归一化存每100g
+            calories = Math.round(calories * 10) / 10;
+            carbs = Math.round(carbs * 10) / 10;
+            protein = Math.round(protein * 10) / 10;
+            fat = Math.round(fat * 10) / 10;
+            const oldFood = cfmEditingFoodId ? (customFoods[user.id] || []).find(f => f.id === cfmEditingFoodId) : null;
+            let food;
+            if (oldFood) {
+                // 更新库定义
+                oldFood.name = name; oldFood.calories = calories; oldFood.carbs = carbs;
+                oldFood.protein = protein; oldFood.fat = fat; oldFood.unitType = unit;
+                food = oldFood;
+                showToast('✅ 已更新自定义食物');
+            } else {
+                // 新建
+                food = {
+                    id: 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    name, calories, carbs, protein, fat, defaultUnit: unit, unitWeight: 100, isCustom: true, unitType: unit
+                };
+                if (!customFoods[user.id]) customFoods[user.id] = [];
+                customFoods[user.id].push(food);
+                showToast('✅ 已创建自定义食物');
+            }
+            saveAll();
+            // 全量重算历史引用该食物的条目（本地 + 云端）
+            recalcAllHistoryForCustomFood(user.id, food.id, food);
+            document.getElementById('customFoodEditModal').classList.remove('active');
+            document.getElementById('customFoodMgrModal').classList.add('active');
+            renderCustomFoodMgrList();
+        } catch (err) {
+            console.error('保存自定义食物失败:', err);
+            showToast('⚠️ 保存出错: ' + (err.message || err));
+        }
+    }
+
+    // 遍历所有历史 daily_data，重算引用指定自定义食物的条目
+    function recalcAllHistoryForCustomFood(userId, foodId, food) {
+        if (!dailyData[userId]) return;
+        const changed = [];  // 收集需要云端更新的 {row, item}
+        Object.keys(dailyData[userId]).forEach(date => {
+            const day = dailyData[userId][date];
+            ['breakfast', 'lunch', 'dinner', 'snack'].forEach(mk => {
+                const arr = day[mk] || [];
+                arr.forEach(item => {
+                    const isRef = item.id === foodId || ('custom_' + item.id) === foodId || item.id === 'custom_' + foodId;
+                    if (!isRef) return;
+                    // 用当前条目的数量/重量 按新定义重算营养
+                    const w = item.weight || item.quantity || 100;
+                    const qty = item.quantity || w;
+                    let newWeight = w;
+                    if (item.unit === '个' || item.unit === '份') {
+                        // 保持数量语义：weight 是换算克数，不重算（直接用原 weight 比例）
+                        newWeight = w;
+                    }
+                    const factor = (newWeight > 0 ? newWeight : 100) / 100;
+                    // 若原条目按数量（个/份）计，用原 unitWeight 换算？——保留原 weight 作为实际克重
+                    item.calories = Math.round((food.calories || 0) * factor * 10) / 10;
+                    item.carbs = Math.round((food.carbs || 0) * factor * 10) / 10;
+                    item.protein = Math.round((food.protein || 0) * factor * 10) / 10;
+                    item.fat = Math.round((food.fat || 0) * factor * 10) / 10;
+                    changed.push({ row: item, date, mk });
+                });
+            });
+        });
+        saveAll();
+        // 云端批量更新（逐条，thenable 兼容）
+        if (isOnlineMode) {
+            changed.forEach(({ row }) => {
+                if (row._dbId) {
+                    supabaseClient.from('daily_data').update({
+                        food_name: food.name, calories: row.calories, protein: row.protein,
+                        carbs: row.carbs, fat: row.fat, unit: row.unit, weight: row.weight
+                    }).eq('id', row._dbId).then(function(){}, function(e){ console.error('历史重算云端更新失败:', e); });
+                }
+            });
+        }
+        // 刷新界面
+        renderMeals(); renderAdvice(); renderHistory();
+        if (changed.length > 0) showToast(`✅ 已同步更新 ${changed.length} 条历史记录`);
+    }
+
     function openFoodEditModal(meal, idx) {
         const meals = getCurrentMeals();
         const item = meals[meal][idx];
@@ -3000,20 +3230,41 @@
                 validEntries.push({ date, total, target, tdee, deficit });
             }
         }
-        // 默认取最近15天；如果有自定义日期范围则按范围过滤
+        // 默认取最近30个日历日（无数据的日期补空行）；如果有自定义日期范围则按范围过滤
         let start = document.getElementById('histStart').value;
         let end = document.getElementById('histEnd').value;
         let filtered;
         if (start || end) {
-            filtered = validEntries.filter(e => (!start || e.date >= start) && (!end || e.date <= end));
+            // 自定义范围：按日历日序列补齐空行
+            const s = start || validEntries.length ? (start || validEntries[validEntries.length-1].date) : getDateDaysAgo(29);
+            const e = end || getToday();
+            filtered = [];
+            const cur = new Date(s + 'T00:00:00');
+            const endD = new Date(e + 'T00:00:00');
+            while (cur <= endD) {
+                const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+                const found = validEntries.find(v => v.date === ds);
+                filtered.push(found || { date: ds, total: { calories: 0, carbs: 0, protein: 0, fat: 0 }, target: 0, deficit: null, empty: true });
+                cur.setDate(cur.getDate() + 1);
+            }
         } else {
-            filtered = validEntries.slice(0, 15);
+            // 近30个日历日，无数据补空行（从今天往前推30天）
+            filtered = [];
+            for (let i = 29; i >= 0; i--) {
+                const ds = getDateDaysAgo(i);
+                const found = validEntries.find(v => v.date === ds);
+                filtered.push(found || { date: ds, total: { calories: 0, carbs: 0, protein: 0, fat: 0 }, target: 0, deficit: null, empty: true });
+            }
         }
         if (histSortOrder === 'desc') { /* filtered already desc */ }
         else { filtered = filtered.slice().reverse(); }
         let html = '';
         let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, count = 0;
         filtered.forEach(e => {
+            if (e.empty) {
+                html += `<tr class="hist-empty-row" data-date="${e.date}"><td class="text-secondary">${e.date}</td><td class="text-secondary">${getWeekdayCN(e.date)}</td><td class="text-secondary">-</td><td class="text-secondary">-</td><td class="text-secondary">-</td><td class="text-secondary">-</td><td class="text-secondary">-</td><td class="text-secondary">-</td></tr>`;
+                return;
+            }
             const deficitStr = e.deficit > 0 ? `+${Math.round(e.deficit)}` : Math.round(e.deficit);
             const cls = e.deficit >= 0 ? 'deficit-ok' : 'deficit-over';
             html += `<tr class="data-row" data-date="${e.date}"><td>${e.date}</td><td>${getWeekdayCN(e.date)}</td><td>${Math.round(e.total.calories)}</td><td>${e.target}</td><td class="${cls}">${deficitStr}</td><td class="nutrient-td">${Math.round(e.total.carbs)}</td><td class="nutrient-td">${Math.round(e.total.protein)}</td><td class="nutrient-td">${Math.round(e.total.fat)}</td></tr>`;
@@ -3021,16 +3272,16 @@
         });
         const foot = document.getElementById('histFoot');
         if (foot) {
-            if (html) {
-                const avgCal = count > 0 ? Math.round(totalCal / count) : 0;
-                const avgProtein = count > 0 ? Math.round(totalProtein / count) : 0;
-                const avgCarbs = count > 0 ? Math.round(totalCarbs / count) : 0;
-                const avgFat = count > 0 ? Math.round(totalFat / count) : 0;
+            if (count > 0) {
+                const avgCal = Math.round(totalCal / count);
+                const avgProtein = Math.round(totalProtein / count);
+                const avgCarbs = Math.round(totalCarbs / count);
+                const avgFat = Math.round(totalFat / count);
                 foot.style.display = '';
                 foot.innerHTML = `<tr><td>📊 平均</td><td></td><td>${avgCal}</td><td>-</td><td>-</td><td class="nutrient-td">${avgCarbs}</td><td class="nutrient-td">${avgProtein}</td><td class="nutrient-td">${avgFat}</td></tr>`;
             } else {
-                html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>';
                 foot.style.display = 'none';
+                foot.innerHTML = '';
             }
         } else if (!html) {
             html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>';
@@ -3109,25 +3360,46 @@
         if (typeof updateWeightHistPeriodDisplay === 'function') updateWeightHistPeriodDisplay();
         let start = document.getElementById('weightHistStart').value;
         let end = document.getElementById('weightHistEnd').value;
-        // 默认显示最近15天有效记录（每天一条，优先空腹）
+        // 默认显示最近30个日历日（无记录日期补空行，每天一条，优先空腹）；自定义范围同样补空行
         let records;
-        if (!start && !end) {
+        let useCalendarDays = !start && !end;
+        if (useCalendarDays) {
             const allRecs = (weightRecords[user.id] || []).slice().sort((a, b) => b.date.localeCompare(a.date));
             const dateMap = {};
             allRecs.forEach(r => { if (!dateMap[r.date] || timePriority(r.time) < timePriority(dateMap[r.date].time)) dateMap[r.date] = r; });
-            const recent15 = Object.keys(dateMap).sort().reverse().slice(0, 15);
-            records = recent15.map(d => dateMap[d]);
+            // 近30个日历日，无数据补空
+            records = [];
+            for (let i = 29; i >= 0; i--) {
+                const ds = getDateDaysAgo(i);
+                records.push(dateMap[ds] || { date: ds, weight: '', bodyfat: '', time: '', empty: true });
+            }
         } else {
-            if (!start) { start = getDateDaysAgo(13); }
+            if (!start) { start = getDateDaysAgo(29); }
             if (!end) { end = getToday(); }
             document.getElementById('weightHistStart').value = start;
             document.getElementById('weightHistEnd').value = end;
-            records = (weightRecords[user.id] || []).filter(r => r.date >= start && r.date <= end).sort((a, b) => b.date.localeCompare(a.date));
+            // 自定义范围也补空行
+            const s = new Date(start + 'T00:00:00');
+            const e = new Date(end + 'T00:00:00');
+            const rangeRecs = (weightRecords[user.id] || []).filter(r => r.date >= start && r.date <= end).sort((a, b) => b.date.localeCompare(a.date));
+            const rangeMap = {};
+            rangeRecs.forEach(r => { if (!rangeMap[r.date] || timePriority(r.time) < timePriority(rangeMap[r.date].time)) rangeMap[r.date] = r; });
+            records = [];
+            const cur = new Date(s);
+            while (cur <= e) {
+                const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+                records.push(rangeMap[ds] || { date: ds, weight: '', bodyfat: '', time: '', empty: true });
+                cur.setDate(cur.getDate() + 1);
+            }
         }
         const timeMap = { fasting: '空腹', morning: '早晨', noon: '中午', evening: '晚上' };
         if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-secondary text-center">所选日期无体重记录</td></tr>'; return; }
         let html = '';
         records.forEach(r => {
+            if (r.empty) {
+                html += `<tr class="hist-empty-row" data-date="${r.date}"><td class="text-secondary">${r.date}</td><td class="text-secondary">${getWeekdayCN(r.date)}</td><td class="text-secondary">-</td><td class="text-secondary">-</td><td class="text-secondary">-</td></tr>`;
+                return;
+            }
             html += `<tr class="weight-row" data-date="${r.date}" data-time="${r.time || 'fasting'}" data-weight="${r.weight}" data-bodyfat="${r.bodyfat || ''}" style="cursor:pointer;"><td>${r.date}</td><td>${getWeekdayCN(r.date)}</td><td>${r.weight}</td><td>${r.bodyfat || '—'}</td><td>${timeMap[r.time] || r.time || '—'}</td></tr>`;
         });
         tbody.innerHTML = html;
@@ -3876,7 +4148,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.47 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.49 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3886,7 +4158,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.47 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.49 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -3935,6 +4207,17 @@
 
         // 清空今日饮食
         document.getElementById('clearTodayBtn').addEventListener('click', clearToday);
+
+        // 自定义食物管理
+        document.getElementById('customFoodManagerBtn').addEventListener('click', openCustomFoodMgr);
+        document.getElementById('cfmCloseBtn').addEventListener('click', function() { document.getElementById('customFoodMgrModal').classList.remove('active'); });
+        document.getElementById('customFoodMgrModal').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+        document.getElementById('cfmSearch').addEventListener('input', renderCustomFoodMgrList);
+        document.getElementById('cfmAddBtn').addEventListener('click', function() { openCustomFoodEdit(null); });
+        document.getElementById('cfeCancel').addEventListener('click', function() { document.getElementById('customFoodEditModal').classList.remove('active'); });
+        document.getElementById('cfeConfirm').addEventListener('click', saveCustomFoodEdit);
+        document.getElementById('cfeModeNutrient').addEventListener('click', function() { switchCfeMode('nutrient'); });
+        document.getElementById('cfeModeCalorie').addEventListener('click', function() { switchCfeMode('calorie'); });
 
         // 统一导入导出按钮
         document.getElementById('exportUserDataBtn').addEventListener('click', exportUserData);
@@ -4036,7 +4319,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.47 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.49 事件绑定完成');
     }
 
     // 全局错误捕获
