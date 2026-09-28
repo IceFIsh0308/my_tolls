@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.43</title>
+    <title>智能饮食规划器 V3.3.44</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -410,7 +410,7 @@
         </div>
 
         <div class="card">
-            <div class="card-title">📊 今日建议</div>
+            <div class="card-title">📊 今日热量建议</div>
             <div class="card-body" id="adviceContent">
                 <div class="text-secondary text-center" style="padding:12px 0;">请选择用户</div>
             </div>
@@ -427,7 +427,7 @@
     <div class="row-middle">
         <div class="card">
             <div class="meal-header-row">
-                <span class="label">🍽️ 今日饮食</span>
+                <span class="label">🍽️ 今日饮食记录</span>
                 <input type="date" class="date-picker" id="mealDatePicker" />
                 <button class="btn btn-outline btn-sm" id="backToTodayBtn" style="display:none;font-size:12px;padding:3px 10px;">← 回到今日</button>
                 <span class="title-right">
@@ -466,7 +466,7 @@
 
     <div class="row-bottom">
         <div class="card card-left">
-            <div class="card-title">📈 历史热量与营养统计</div>
+            <div class="card-title">📈 历史摄入记录</div>
             <div class="hist-filter">
                 <span class="period-picker" id="histPeriod">
                     <span class="period-display" id="histPeriodDisplay">全部</span>
@@ -708,7 +708,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.43</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.44</div>
 
 <script>
     // ============================================================
@@ -3070,12 +3070,12 @@
         const label = document.querySelector('.meal-header-row .label');
         if (!label) return;
         if (date === getToday()) {
-            label.textContent = '🍽️ 今日饮食';
+            label.textContent = '🍽️ 今日饮食记录';
         } else {
             // 格式化为 yyyy/MM/dd 饮食
             const parts = date.split('-');
             const formatted = `${parts[0]}/${parts[1]}/${parts[2]}`;
-            label.textContent = `🍽️ ${formatted} 饮食`;
+            label.textContent = `🍽️ ${formatted} 饮食记录`;
         }
     }
 
@@ -3855,7 +3855,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.43 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.44 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3865,7 +3865,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.43 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.44 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4015,7 +4015,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.43 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.44 事件绑定完成');
     }
 
     // 全局错误捕获
