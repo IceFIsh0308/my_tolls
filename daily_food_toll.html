@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.62</title>
+    <title>智能饮食规划器 V3.3.63</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -246,16 +246,22 @@
 
         .meal-add-btn:hover { background: var(--primary-bg); border-color: var(--primary); }
         .meal-add-area { padding: 4px 6px 6px 6px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin: 2px 0; position: relative; }
-        .meal-add-area .ma-row { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; position: relative; }
-        .meal-add-area .ma-search { position: relative; flex: 1; min-width: 0; }
+        .meal-add-area .ma-row { display: flex; gap: 3px; align-items: center; position: relative; }
+        .meal-add-area .ma-search { position: relative; flex: 1; min-width: 60px; }
         .meal-add-area .ma-search input { width: 100%; padding: 3px 6px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 11px; background: var(--bg); outline: none; }
         .meal-add-area .ma-search input:focus { border-color: var(--primary); }
         .meal-add-area .ma-copy-btn { flex-shrink: 0; padding: 3px 8px; border: 1.5px solid var(--border); border-radius: 4px; background: var(--bg); cursor: pointer; font-size: 12px; line-height: 1; }
         .meal-add-area .ma-copy-btn:hover { border-color: var(--primary); background: var(--primary-bg); }
         .meal-add-area .ma-weight-row { display: none; gap: 3px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
         .meal-add-area .ma-weight-row.active { display: flex; }
-        .meal-add-area .ma-weight { width: 64px; padding: 3px 2px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 11px; text-align: center; background: var(--bg); }
-        .meal-add-area .ma-unit { padding: 3px 2px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 10px; background: var(--bg); outline: none; max-width: 40px; }
+        .meal-add-area .ma-row .ma-weight,
+        .meal-add-area .ma-row .ma-unit,
+        .meal-add-area .ma-row .ma-add { display: none; }
+        .meal-add-area .ma-row.has-selected .ma-weight,
+        .meal-add-area .ma-row.has-selected .ma-unit,
+        .meal-add-area .ma-row.has-selected .ma-add { display: inline-block; }
+        .meal-add-area .ma-weight { width: 64px; padding: 3px 2px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 11px; text-align: center; background: var(--bg); flex-shrink: 0; }
+        .meal-add-area .ma-unit { padding: 3px 2px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 10px; background: var(--bg); outline: none; max-width: 40px; flex-shrink: 0; }
         .meal-add-area .ma-add { padding: 3px 8px; border: none; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--primary); color: #fff; white-space: nowrap; margin-left: auto; }
         .meal-add-area .ma-add:hover { background: #1E6B35; }
         .meal-add-area .ma-add:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
@@ -771,7 +777,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.62</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.63</div>
 
 <script>
     // ============================================================
@@ -2195,12 +2201,10 @@
             if (currentMeal === key) {
                 html += `<div class="meal-add-btn-wrap"><button class="meal-add-btn" data-meal="${key}" id="mealAddBtn-${key}" style="flex:4;">➕</button><button class="meal-add-btn" data-meal="${key}" id="maCopyBtn-${key}" title="复制历史食物" style="flex:1;">📋</button></div>`;
                 html += `<div class="meal-add-area" id="mealAddArea-${key}" style="display:none;">`;
-                html += `<div class="ma-row">`;
+                html += `<div class="ma-row" id="maRow-${key}">`;
                 html += `<div class="ma-search"><input type="text" id="maSearch-${key}" placeholder="搜索食物..." autocomplete="off" /><div class="ma-suggest" id="maSuggest-${key}"></div></div>`;
-                html += `</div>`;
-                // 重量输入行（选中食物后展开）
-                html += `<div class="ma-weight-row" id="maWeightRow-${key}">`;
-                html += `<input type="number" class="ma-weight" id="maWeight-${key}" placeholder="克" value="100" min="1" />`;
+                // 数量/单位/添加按钮（选中食物后与搜索框同行显示）
+                html += `<input type="number" class="ma-weight" id="maWeight-${key}" placeholder="数量" value="100" min="1" />`;
                 html += `<select class="ma-unit" id="maUnit-${key}"><option value="克">克</option><option value="毫升">毫升</option><option value="个">个</option><option value="份">份</option></select>`;
                 html += `<button class="ma-add" data-meal="${key}" id="maAddBtn-${key}">添加</button>`;
                 html += `</div>`;
@@ -2279,8 +2283,8 @@
             const searchInput = document.getElementById(`maSearch-${mealKey}`);
             if (searchInput) searchInput.focus();
             // 重置：隐藏重量输入行
-            const weightRow = document.getElementById(`maWeightRow-${mealKey}`);
-            if (weightRow) weightRow.classList.remove('active');
+            const weightRow = document.getElementById(`maRow-${mealKey}`);
+            if (weightRow) weightRow.classList.remove('has-selected');
             mealAddSelectedFood[mealKey] = null;
         });
         // 搜索输入
@@ -2294,8 +2298,8 @@
                 // 如果之前选了食物，现在重新搜索，重置状态
                 if (mealAddSelectedFood[mealKey]) {
                     mealAddSelectedFood[mealKey] = null;
-                    const weightRow = document.getElementById(`maWeightRow-${mealKey}`);
-                    if (weightRow) weightRow.classList.remove('active');
+                    const weightRow = document.getElementById(`maRow-${mealKey}`);
+                    if (weightRow) weightRow.classList.remove('has-selected');
                 }
                 renderMealAddSuggestions(val, mealKey, suggestBox);
                 // 检测滚动方向决定建议框向上还是向下
@@ -2407,8 +2411,8 @@
                     searchInput.value = food.name;
                     suggestBox.classList.remove('active');
                     // 展开重量输入行
-                    const weightRow = document.getElementById(`maWeightRow-${mealKey}`);
-                    if (weightRow) weightRow.classList.add('active');
+                    const weightRow = document.getElementById(`maRow-${mealKey}`);
+                    if (weightRow) weightRow.classList.add('has-selected');
                     const unitSelect = document.getElementById(`maUnit-${mealKey}`);
                     unitSelect.value = food.unitType || food.defaultUnit || '克';
                     const weightInput = document.getElementById(`maWeight-${mealKey}`);
@@ -2492,8 +2496,8 @@
             const searchInput = document.getElementById(`maSearch-${mealKey}`);
             if (searchInput) {
                 searchInput.value = newFood.name;
-                const weightRow = document.getElementById(`maWeightRow-${mealKey}`);
-                if (weightRow) weightRow.classList.add('active');
+                const weightRow = document.getElementById(`maRow-${mealKey}`);
+                if (weightRow) weightRow.classList.add('has-selected');
                 const unitSelect = document.getElementById(`maUnit-${mealKey}`);
                 if (unitSelect) unitSelect.value = unitType;
                 const weightInput = document.getElementById(`maWeight-${mealKey}`);
@@ -2523,8 +2527,8 @@
         weightInput.value = '100';
         unitSelect.value = '克';
         // 折叠重量输入行
-        const weightRow = document.getElementById(`maWeightRow-${mealKey}`);
-        if (weightRow) weightRow.classList.remove('active');
+        const weightRow = document.getElementById(`maRow-${mealKey}`);
+        if (weightRow) weightRow.classList.remove('has-selected');
         // 折叠添加区域，恢复➕按钮
         document.getElementById(`mealAddArea-${mealKey}`).style.display = 'none';
         const addBtn = document.getElementById(`mealAddBtn-${mealKey}`);
@@ -4463,7 +4467,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.62 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.63 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4473,7 +4477,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.62 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.63 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4641,7 +4645,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.62 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.63 事件绑定完成');
     }
 
     // 全局错误捕获
