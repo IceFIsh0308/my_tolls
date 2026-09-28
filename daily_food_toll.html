@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.45</title>
+    <title>智能饮食规划器 V3.3.46</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -710,7 +710,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.45</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.46</div>
 
 <script>
     // ============================================================
@@ -2590,6 +2590,7 @@
         let done = false;
         function commit() {
             if (done) return; done = true;
+            try {
             const qty = parseFloat(input.value) || 0;
             const oldW = w;
             div.remove(); fw.style.display = '';
@@ -2618,6 +2619,10 @@
             }
             saveAll(); renderMeals(); renderAdvice(); renderHistory();
             showToast('✅ 已更新 ' + item.name + ' ' + qty + unit);
+            } catch(err) {
+                console.error('内联修改数量失败:', err);
+                showToast('⚠️ 修改失败: ' + (err && err.message ? err.message : err));
+            }
         }
         input.addEventListener('keydown', function(e) { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { done = true; div.remove(); fw.style.display = ''; renderMeals(); } });
         input.addEventListener('blur', function() { commit(); });
@@ -2712,10 +2717,20 @@
         showToast('✅ 食物已更新');
         } catch(err) {
             console.error('保存食物失败:', err);
-            showToast('⚠️ 保存出错: ' + (err.message || err));
+            showToast('⚠️ 保存出错: ' + (err && err.message ? err.message : err));
         } finally {
             closeFoodEditModal();
         }
+    }
+
+    // 双击食物：兼容自定义/内置，统一走编辑弹窗修改数量与营养
+    function dblclickEditFood(meal, idx) {
+        try {
+            const meals = getCurrentMeals();
+            const it = meals[meal] ? meals[meal][idx] : null;
+            if (!it) return;
+            openFoodEditModal(meal, idx);
+        } catch(e) { console.error('双击编辑失败:', e); }
     }
 
     // ============================================================
@@ -3005,16 +3020,20 @@
             totalCal += e.total.calories; totalProtein += e.total.protein; totalCarbs += e.total.carbs; totalFat += e.total.fat; count++;
         });
         const foot = document.getElementById('histFoot');
-        if (html) {
-            const avgCal = count > 0 ? Math.round(totalCal / count) : 0;
-            const avgProtein = count > 0 ? Math.round(totalProtein / count) : 0;
-            const avgCarbs = count > 0 ? Math.round(totalCarbs / count) : 0;
-            const avgFat = count > 0 ? Math.round(totalFat / count) : 0;
-            foot.style.display = '';
-            foot.innerHTML = `<tr><td>📊 平均</td><td></td><td>${avgCal}</td><td>-</td><td>-</td><td class="nutrient-td">${avgCarbs}</td><td class="nutrient-td">${avgProtein}</td><td class="nutrient-td">${avgFat}</td></tr>`;
-        } else {
+        if (foot) {
+            if (html) {
+                const avgCal = count > 0 ? Math.round(totalCal / count) : 0;
+                const avgProtein = count > 0 ? Math.round(totalProtein / count) : 0;
+                const avgCarbs = count > 0 ? Math.round(totalCarbs / count) : 0;
+                const avgFat = count > 0 ? Math.round(totalFat / count) : 0;
+                foot.style.display = '';
+                foot.innerHTML = `<tr><td>📊 平均</td><td></td><td>${avgCal}</td><td>-</td><td>-</td><td class="nutrient-td">${avgCarbs}</td><td class="nutrient-td">${avgProtein}</td><td class="nutrient-td">${avgFat}</td></tr>`;
+            } else {
+                html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>';
+                foot.style.display = 'none';
+            }
+        } else if (!html) {
             html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>';
-            foot.style.display = 'none';
         }
         tbody.innerHTML = html;
 
@@ -3857,7 +3876,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.45 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.46 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3867,7 +3886,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.45 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.46 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4017,7 +4036,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.45 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.46 事件绑定完成');
     }
 
     // 全局错误捕获
