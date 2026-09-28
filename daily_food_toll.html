@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.58</title>
+    <title>智能饮食规划器 V3.3.59</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -768,7 +768,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.58</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.59</div>
 
 <script>
     // ============================================================
@@ -3086,11 +3086,32 @@
 
         ctx.strokeStyle = '#2D8B46';
         ctx.lineWidth = 2;
-        ctx.beginPath();
-        let started = false;
-        points.forEach(p => { if (!p) { started = false; return; } if (!started) { ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y); });
-        ctx.stroke();
+        // 平滑虚线折线（断点分段，曲线连接）— 体重图
+        if (typeof window.__smoothDashed !== 'function') {
+            window.__smoothDashed = function(ctx, points) {
+                function drawSeg(seg) {
+                    ctx.setLineDash([4, 3]);
+                    ctx.beginPath();
+                    ctx.moveTo(seg[0].x, seg[0].y);
+                    for (let i = 1; i < seg.length; i++) {
+                        const prev = seg[i - 1], cur = seg[i];
+                        const midX = (prev.x + cur.x) / 2;
+                        ctx.bezierCurveTo(midX, prev.y, midX, cur.y, cur.x, cur.y);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                let seg = [];
+                points.forEach(p => {
+                    if (!p) { if (seg.length >= 2) drawSeg(seg); seg = []; return; }
+                    seg.push(p);
+                });
+                if (seg.length >= 2) drawSeg(seg);
+            };
+        }
+        window.__smoothDashed(ctx, points);
 
+        // 画数据点
         points.forEach(p => {
             if (!p) return;
             ctx.fillStyle = '#2D8B46';
@@ -3182,17 +3203,10 @@
             return { x, y, bodyfat: r.bodyfat, date: r.date };
         });
 
-        // 画折线（橙色 #FF8C00）
+        // 画折线（橙色 #FF8C00，平滑虚线）
         ctx.strokeStyle = '#FF8C00';
         ctx.lineWidth = 2;
-        ctx.beginPath();
-        let started = false;
-        points.forEach(p => {
-            if (!p) { started = false; return; }
-            if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-            else ctx.lineTo(p.x, p.y);
-        });
-        ctx.stroke();
+        window.__smoothDashed(ctx, points);
 
         // 画数据点
         points.forEach(p => {
@@ -4184,7 +4198,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.58 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.59 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4194,7 +4208,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.58 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.59 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4361,7 +4375,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.58 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.59 事件绑定完成');
     }
 
     // 全局错误捕获
