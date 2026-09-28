@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.53</title>
+    <title>智能饮食规划器 V3.3.54</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -481,8 +481,8 @@
                     <input type="date" class="period-input" id="histEnd" />
                 </span>
                 <button class="btn btn-primary btn-sm" id="histRefreshBtn">查询</button>
-                <button class="btn btn-outline btn-sm" id="histSortBtn">📅 降序</button>
                 <button class="btn btn-outline btn-sm" id="histResetBtn">重置</button>
+                <button class="btn btn-outline btn-sm" id="histSortBtn" style="margin-left:auto;">📅 降序</button>
             </div>
             <div class="hist-table-wrap" id="histTableWrap">
                 <table class="hist-table" id="histTable">
@@ -510,9 +510,9 @@
                     <button class="btn btn-primary btn-sm" id="addWeightBtn">记录</button>
                 </div>
                 <div class="weight-filter">
-                    <span class="text-secondary" style="font-size:10px;margin-left:4px;">(优先空腹) · 双击图表可放大</span>
-                    <label for="weightDays" style="margin-left:auto;">展示天数</label>
-                    <input type="number" id="weightDays" value="14" min="3" max="90" style="width:50px;" placeholder="天数" title="自定义天数" />
+                    <label for="weightDays">展示天数</label>
+                    <input type="number" id="weightDays" value="30" min="3" max="90" style="width:50px;" placeholder="天数" title="自定义天数" />
+                    <span class="text-secondary" style="font-size:10px;margin-left:auto;">(优先空腹) · 双击图表可放大</span>
                 </div>
                 <div class="weight-chart-container" id="weightChartContainer">
                     <div class="weight-chart-label">📈 体重 (kg)</div>
@@ -758,7 +758,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.53</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.54</div>
 
 <script>
     // ============================================================
@@ -3267,8 +3267,14 @@
                 filtered.push(found || { date: ds, total: { calories: 0, carbs: 0, protein: 0, fat: 0 }, target: 0, deficit: null, empty: true });
             }
         }
-        if (histSortOrder === 'desc') { /* filtered already desc */ }
-        else { filtered = filtered.slice().reverse(); }
+        // 排序：desc=新→旧(倒序)，asc=旧→新(正序)；while分支生成升序、for分支生成降序，统一按开关翻转
+        if (histSortOrder === 'asc') {
+            // 需要正序：若当前是降序则翻转
+            if (filtered.length > 0 && filtered[0].date > filtered[filtered.length-1].date) filtered = filtered.slice().reverse();
+        } else {
+            // 需要倒序：若当前是升序则翻转
+            if (filtered.length > 0 && filtered[0].date < filtered[filtered.length-1].date) filtered = filtered.slice().reverse();
+        }
         let html = '';
         let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0, count = 0;
         filtered.forEach(e => {
@@ -3409,6 +3415,8 @@
                 cur.setDate(cur.getDate() + 1);
             }
         }
+        // 体重表始终倒序（新→旧）
+        if (records.length > 0 && records[0].date < records[records.length-1].date) records = records.slice().reverse();
         const timeMap = { fasting: '空腹', morning: '早晨', noon: '中午', evening: '晚上' };
         if (records.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-secondary text-center">所选日期无体重记录</td></tr>'; return; }
         let html = '';
@@ -4165,7 +4173,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.53 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.54 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4175,7 +4183,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.53 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.54 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4342,7 +4350,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.53 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.54 事件绑定完成');
     }
 
     // 全局错误捕获
