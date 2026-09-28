@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.40</title>
+    <title>智能饮食规划器 V3.3.41</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -221,8 +221,8 @@
         .hist-table-wrap { max-height: 180px; overflow-y: auto; }
         .hist-table { width: 100%; font-size: 11px; border-collapse: collapse; white-space: nowrap; }
         .hist-table th, .hist-table td { padding: 3px 5px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
-        .hist-avg { font-size: 11px; font-weight: 600; background: #F3F4F6; border-top: 2px solid var(--border); padding: 3px 5px; white-space: nowrap; }
         .hist-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); position: sticky; top: 0; z-index: 2; }
+        .hist-table tfoot td { font-weight: 600; background: #F3F4F6; border-top: 2px solid var(--border); position: sticky; bottom: 0; z-index: 2; }
         .hist-table .deficit-ok { color: var(--primary); }
         .hist-table .deficit-over { color: #DC2626; }
         .hist-table .nutrient-td { font-size: 10px; color: var(--text-secondary); }
@@ -480,9 +480,9 @@
                 <table class="hist-table" id="histTable">
                     <thead><tr><th>日期</th><th>星期</th><th>摄入(大卡)</th><th>目标(大卡)</th><th>实际缺口</th><th>碳水(克)</th><th>蛋白质(克)</th><th>脂肪(克)</th></tr></thead>
                     <tbody id="histBody"></tbody>
+                    <tfoot id="histFoot" style="display:none;"></tfoot>
                 </table>
             </div>
-            <div class="hist-avg" id="histAvgBar" style="display:none;"></div>
             
         </div>
 
@@ -707,7 +707,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.40</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.41</div>
 
 <script>
     // ============================================================
@@ -2995,17 +2995,17 @@
             html += `<tr class="data-row" data-date="${e.date}"><td>${e.date}</td><td>${getWeekdayCN(e.date)}</td><td>${Math.round(e.total.calories)}</td><td>${e.target}</td><td class="${cls}">${deficitStr}</td><td class="nutrient-td">${Math.round(e.total.carbs)}</td><td class="nutrient-td">${Math.round(e.total.protein)}</td><td class="nutrient-td">${Math.round(e.total.fat)}</td></tr>`;
             totalCal += e.total.calories; totalProtein += e.total.protein; totalCarbs += e.total.carbs; totalFat += e.total.fat; count++;
         });
-        const avgBar = document.getElementById('histAvgBar');
+        const foot = document.getElementById('histFoot');
         if (html) {
             const avgCal = count > 0 ? Math.round(totalCal / count) : 0;
             const avgProtein = count > 0 ? Math.round(totalProtein / count) : 0;
             const avgCarbs = count > 0 ? Math.round(totalCarbs / count) : 0;
             const avgFat = count > 0 ? Math.round(totalFat / count) : 0;
-            avgBar.style.display = 'block';
-            avgBar.innerHTML = `📊 平均：${avgCal} 大卡 ｜ 碳水 ${avgCarbs}g ｜ 蛋白质 ${avgProtein}g ｜ 脂肪 ${avgFat}g（${count} 天）`;
+            foot.style.display = '';
+            foot.innerHTML = `<tr><td>📊 平均</td><td></td><td>${avgCal}</td><td>-</td><td>-</td><td class="nutrient-td">${avgCarbs}</td><td class="nutrient-td">${avgProtein}</td><td class="nutrient-td">${avgFat}</td></tr>`;
         } else {
             html = '<tr><td colspan="8" class="text-secondary text-center">所选日期无数据</td></tr>';
-            avgBar.style.display = 'none';
+            foot.style.display = 'none';
         }
         tbody.innerHTML = html;
 
@@ -3848,7 +3848,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.40 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.41 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3858,7 +3858,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.40 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.41 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4008,7 +4008,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.40 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.41 事件绑定完成');
     }
 
     // 全局错误捕获
