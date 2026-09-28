@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.46</title>
+    <title>智能饮食规划器 V3.3.47</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -710,7 +710,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.46</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.47</div>
 
 <script>
     // ============================================================
@@ -984,7 +984,7 @@
                                             food_id: li.id, food_name: li.name, weight: li.weight, unit: li.unit,
                                             calories: li.calories, protein: li.protein, carbs: li.carbs, fat: li.fat,
                                             created_at: li._localTime || new Date().toISOString(),
-                                        }).then(({data})=>{if(data) li._dbId=data.id}).catch(e=>{console.error('合并同步失败:',e); addSyncError(date, mealKey, li.name, (e.message||JSON.stringify(e)).slice(0,100));});
+                                        }).then(function(d){ const data = d && d.data; if(data) li._dbId=data.id; }, function(e){ console.error('合并同步失败:',e); addSyncError(date, mealKey, li.name, (e.message||JSON.stringify(e)).slice(0,100)); });
                                     }
                                 });
                             }
@@ -1015,7 +1015,7 @@
                                     supabaseClient.from('weight_records').insert({
                                         user_id: uid, date: lw.date, weight: lw.weight,
                                         bodyfat: lw.bodyfat || null, time: lw.time, note: lw.note || ''
-                                    }).then(({data})=>{if(data) lw._dbId=data.id}).catch(e=>console.error('体重合并同步失败:',e));
+                                    }).then(function(d){ const data = d && d.data; if(data) lw._dbId=data.id; }, function(e){ console.error('体重合并同步失败:',e); });
                                 }
                             }
                         });
@@ -1047,7 +1047,7 @@
                                         calories: lf.calories, protein: lf.protein, carbs: lf.carbs,
                                         fat: lf.fat, default_unit: lf.defaultUnit,
                                         unit_weight: lf.unitWeight || 100, unit_type: lf.unitType
-                                    }).then(({data})=>{if(data) lf._dbId=data.id}).catch(e=>console.error('食物合并同步失败:',e));
+                                    }).then(function(d){ const data = d && d.data; if(data) lf._dbId=data.id; }, function(e){ console.error('食物合并同步失败:',e); });
                                 }
                             }
                         });
@@ -2615,7 +2615,7 @@
                 supabaseClient.from('daily_data').update({
                     weight: item.weight, quantity: qty, calories: item.calories,
                     protein: item.protein, carbs: item.carbs, fat: item.fat
-                }).eq('id', item._dbId).catch(e => console.error('云端更新数量失败:', e));
+                }).eq('id', item._dbId).then(function(){}, function(e){ console.error('云端更新数量失败:', e); });
             }
             saveAll(); renderMeals(); renderAdvice(); renderHistory();
             showToast('✅ 已更新 ' + item.name + ' ' + qty + unit);
@@ -2693,11 +2693,11 @@
                     cf.protein = Math.round(protein * per100 * 10) / 10;
                     cf.carbs = Math.round(carbs * per100 * 10) / 10;
                     cf.fat = Math.round(fat * per100 * 10) / 10;
-                    // 云端更新 custom_foods
+                    // 云端更新 custom_foods（thenable 兼容）
                     if (isOnlineMode && cf._dbId) {
                         supabaseClient.from('custom_foods').update({
                             name: cf.name, calories: cf.calories, protein: cf.protein, carbs: cf.carbs, fat: cf.fat
-                        }).eq('id', cf._dbId).catch(e => console.error('云端更新自定义食物失败:', e));
+                        }).eq('id', cf._dbId).then(function(){}, function(e){ console.error('云端更新自定义食物失败:', e); });
                     }
                 }
             }
@@ -2711,7 +2711,7 @@
             supabaseClient.from('daily_data').update({
                 food_name: item.name, weight: item.weight, unit: item.unit,
                 calories: item.calories, protein: item.protein, carbs: item.carbs, fat: item.fat
-            }).eq('id', item._dbId).then(() => {}).catch(e => console.error('云端更新食物失败:', e));
+            }).eq('id', item._dbId).then(function(){}, function(e){ console.error('云端更新食物失败:', e); });
         }
         saveAll(); renderMeals(); renderAdvice(); renderHistory();
         showToast('✅ 食物已更新');
@@ -3442,7 +3442,7 @@
                                         name: newFood.name, calories: newFood.calories, protein: newFood.protein,
                                         carbs: newFood.carbs, fat: newFood.fat, default_unit: newFood.defaultUnit,
                                         unit_type: newFood.unitType
-                                    }).eq('id', existing._dbId).then(()=>{}).catch(e=>console.error('云端更新食物失败:',e));
+                                    }).eq('id', existing._dbId).then(function(){}, function(e){ console.error('云端更新食物失败:',e); });
                                 }
                             } else {
                                 customFoods[userId].push(newFood);
@@ -3876,7 +3876,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.46 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.47 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -3886,7 +3886,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.46 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.47 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4036,7 +4036,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.46 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.47 事件绑定完成');
     }
 
     // 全局错误捕获
