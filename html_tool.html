@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>🛠️ HTML 工具箱 V1.2.0</title>
+<title>🛠️ HTML 工具箱 V1.2.1</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
 body{background:#F5F7FA;color:#1A1A2E;min-height:100vh;display:flex;justify-content:center;padding:20px}
@@ -188,12 +188,12 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <p>生成 · 预览 · 一键部署 GitHub Pages</p>
 </div>
 <div class="tabs">
-<button class="tab-btn" id="tabDeployBtn" onclick="switchTab('deploy')">🗂️ 部署工具</button>
-<button class="tab-btn active" id="tabGenBtn" onclick="switchTab('gen')">🛠️ 生成工具</button>
+<button class="tab-btn active" id="tabDeployBtn" onclick="switchTab('deploy')">🗂️ 部署工具</button>
+<button class="tab-btn" id="tabGenBtn" onclick="switchTab('gen')">🛠️ 生成工具</button>
 </div>
 
 <!-- ========== Tab 1: 部署 ========== -->
-<div class="tab-panel" id="panelDeploy">
+<div class="tab-panel active" id="panelDeploy">
 <div class="deploy-app col3" id="deployApp">
 <div id="stepBar" class="step-indicator">
 <span class="step step-pending" id="step1">1. Token</span><span class="step-arrow">→</span>
@@ -248,7 +248,7 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 </div>
 
 <!-- ========== Tab 2: 生成 ========== -->
-<div class="tab-panel active" id="panelGen">
+<div class="tab-panel" id="panelGen">
 <div class="gen-app" id="genApp">
 <div class="gen-steps">
 <div class="step"><div class="step-num">1</div><span class="step-text">粘贴代码</span></div>
@@ -292,9 +292,9 @@ textarea.commit-input{width:100%;min-height:66px;resize:vertical;padding:8px 12p
 <button class="modal-btn modal-btn-cancel" id="modalCancel">取消</button>
 <button class="modal-btn modal-btn-ok" id="modalOk">确认</button>
 </div></div></div>
-<div class="version-badge">V1.2.0</div>
+<div class="version-badge">V1.2.1</div>
 <script>
-console.log('html_tool V1.2.0');
+console.log('html_tool V1.2.1');
 const CK='github_pages_deploy_v3';
 /* ===== Tab 切换 ===== */
 function switchTab(name){
@@ -442,7 +442,5 @@ document.getElementById('fileName').addEventListener('keydown',function(e){
   if(e.key==='Enter'){e.preventDefault();downloadHTML()}
 });
 </script>
-<script type="text/javascript" src="/accessproxy_statics/h5_fp.js" defer></script>
-<script type="text/javascript" src="/accessproxy_statics/wm.js" defer></script>
 </body>
 </html>
