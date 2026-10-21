@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>智能饮食规划器 V3.3.64</title>
+    <title>智能饮食规划器 V3.3.65</title>
     <!-- SheetJS CDN — 用于XLSX多sheet导入导出 -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS SDK v2 -->
@@ -232,6 +232,8 @@
         .hist-table th, .hist-table td { padding: 3px 5px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
         .hist-table th { background: var(--bg); font-weight: 600; color: var(--text-secondary); position: sticky; top: 0; z-index: 2; }
         .hist-table tr.hist-empty-row td { font-size: 11px; color: var(--text-secondary); }
+        .hist-table tbody tr.hist-empty-row { cursor: pointer; }
+        .hist-table tbody tr.hist-empty-row:hover td { background: var(--primary-bg); }
         .hist-avg-bar { flex: 0 0 auto; font-weight: 600; background: #F3F4F6; border-top: 2px solid var(--border); font-size: 11px; display: flex; }
         .hist-avg-bar .hist-avg-table { border-collapse: collapse; }
         .hist-avg-bar .hist-avg-table td { border-bottom: none; padding: 3px 5px; white-space: nowrap; }
@@ -777,7 +779,7 @@
   ⚠️ <span id="syncWarnCount">0</span> 条数据未同步到云端，点击查看详情
   <div id="syncWarnDetail" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;font-size:11px;line-height:1.6;"></div>
 </div>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.64</div>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;pointer-events:none;">V3.3.65</div>
 
 <script>
     // ============================================================
@@ -1358,6 +1360,17 @@
         { id: 'milk_whole', name: '全脂牛奶', calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
         { id: 'yogurt_greek', name: '希腊酸奶', calories: 59, protein: 10, carbs: 4, fat: 0.4, defaultUnit: '毫升', unitWeight: 100, unitType: '毫升' },
         { id: 'oil_veg', name: '植物油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_olive', name: '橄榄油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_peanut', name: '花生油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_rapeseed', name: '菜籽油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_corn', name: '玉米油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_sesame', name: '芝麻油（香油）', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_coconut', name: '椰子油', calories: 862, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_flaxseed', name: '亚麻籽油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'oil_sunflower', name: '葵花籽油', calories: 884, protein: 0, carbs: 0, fat: 100, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'butter', name: '黄油', calories: 717, protein: 0.9, carbs: 0.1, fat: 81, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'lard', name: '猪油', calories: 827, protein: 0, carbs: 0, fat: 92, defaultUnit: '克', unitWeight: 100, unitType: '克' },
+        { id: 'sesame_paste', name: '芝麻酱', calories: 630, protein: 19, carbs: 22, fat: 52, defaultUnit: '克', unitWeight: 100, unitType: '克' },
         { id: 'almond', name: '杏仁', calories: 579, protein: 21, carbs: 22, fat: 49, defaultUnit: '克', unitWeight: 100, unitType: '克' },
         // ===== 扩充：肉类 =====
         { id: 'pork_belly', name: '五花肉（生）', calories: 508, protein: 9, carbs: 0, fat: 53, defaultUnit: '克', unitWeight: 100, unitType: '克' },
@@ -1504,6 +1517,10 @@
         ['全脂牛奶','qznn','quanzhiniunai'],['牛奶','nn','niunai'],
         ['希腊酸奶','xlsn','xilasuannai'],['酸奶','sn','suannai'],
         ['植物油','zwu','zhiwuyou'],['油','y','you'],['杏仁','xr','xingren'],
+        ['橄榄油','gly','ganlanyou'],['花生油','hsy','huashengyou'],['菜籽油','czy','caiziyou'],['玉米油','ymy','yumiyou'],
+        ['芝麻油（香油）','zmy','zhiyimayou'],['香油','xy','xiangyou'],['椰子油','yzy','yeziyou'],
+        ['亚麻籽油','ymzy','yamaziyou'],['葵花籽油','khzy','kuihuaziyou'],
+        ['黄油','hy','huangyou'],['猪油','zy','zhuyou'],['芝麻酱','zmj','zhimajiang'],
         ['去皮','qp','qupi'],['生','s','sheng'],['熟','sh','shou'],
         ['五花肉（生）','whr','wuhuarou'],
         ['猪排骨','zpg','zhupaigu'],
@@ -3609,7 +3626,7 @@
     // === 历史统计行点击联动 ===
     let selectedHistRow = null;
     function bindHistoryRowClicks() {
-        const rows = document.querySelectorAll('#histBody tr.data-row');
+        const rows = document.querySelectorAll('#histBody tr.data-row, #histBody tr.hist-empty-row');
         rows.forEach(row => {
             row.addEventListener('click', function() {
                 const date = this.dataset.date;
@@ -4467,7 +4484,7 @@
                     // 再从云端加载
                     await loadFromCloud();
                     showMainApp();
-                    console.log('🥗 智能饮食规划器 V3.3.64 已加载（云端模式）');
+                    console.log('🥗 智能饮食规划器 V3.3.65 已加载（云端模式）');
                     return;
                 }
             } catch (e) {
@@ -4477,7 +4494,7 @@
         // 未登录，显示登录表单，隐藏 loading
         document.getElementById('authInitLoading').style.display = 'none';
         document.getElementById('authFormBox').style.display = 'block';
-        console.log('🥗 智能饮食规划器 V3.3.64 已加载（待登录）');
+        console.log('🥗 智能饮食规划器 V3.3.65 已加载（待登录）');
     });
 
     function bindAllEvents() {
@@ -4645,7 +4662,7 @@
         let resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderWeightChart, 200); });
 
-        console.log('🥗 智能饮食规划器 V3.3.64 事件绑定完成');
+        console.log('🥗 智能饮食规划器 V3.3.65 事件绑定完成');
     }
 
     // 全局错误捕获
