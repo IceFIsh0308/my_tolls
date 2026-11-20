@@ -173,7 +173,15 @@ body {
 .item.done:hover { border-color: var(--primary); background: var(--primary-soft); }
 .item-main { flex: 1; min-width: 0; }
 .item-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.item-meta {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .item-state {
   font-size: 12px;
   flex-shrink: 0;
@@ -218,6 +226,24 @@ body {
 }
 .item-save:active { transform: scale(.96); }
 .item-save:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+/* 编辑按钮（描边，与下载区分） */
+.item-edit {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: border-color .15s, color .15s, transform .1s;
+}
+.item-edit:hover { border-color: var(--primary); color: var(--primary-dark); }
+.item-edit:active { transform: scale(.96); }
 
 /* ===== 继续添加 ===== */
 .addmore {
@@ -311,6 +337,159 @@ body {
 }
 .duplist li:first-child { border-top: 0; padding-top: 0; }
 .duplist li b { color: #78350f; }
+
+/* ===== 编辑器（预览 + 截取） ===== */
+.editor {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .05);
+}
+.ed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  background: #fafbfc;
+}
+.ed-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ed-title span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #fff7ed;
+  color: var(--primary-dark);
+  border: 1px solid #fed7aa;
+}
+.ed-close {
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+.ed-close:hover { color: var(--text); }
+.ed-body { padding: 14px 16px 16px; }
+
+.ed-video {
+  width: 100%;
+  max-height: 60vh;
+  background: #000;
+  border-radius: 10px;
+  display: block;
+}
+
+/* 时间轴 */
+.ed-trimbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.ed-time {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  flex-shrink: 0;
+  min-width: 42px;
+  text-align: center;
+}
+.ed-track {
+  position: relative;
+  flex: 1;
+  height: 34px;
+  background: #eef0f3;
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: none;
+}
+.ed-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(255, 125, 0, .22);
+  border-top: 2px solid var(--primary);
+  border-bottom: 2px solid var(--primary);
+  pointer-events: none;
+}
+.ed-handle {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 14px;
+  margin-left: -7px;
+  background: var(--primary);
+  border-radius: 5px;
+  cursor: ew-resize;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+}
+.ed-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 12px;
+  background: rgba(255, 255, 255, .85);
+  border-radius: 1px;
+}
+
+.ed-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 9px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.ed-info b { color: var(--text); font-variant-numeric: tabular-nums; }
+.ed-hint { color: #b45309; font-size: 11.5px; }
+.ed-hint:empty { display: none; }
+
+.ed-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.ed-actions .btn { flex: 1 1 auto; min-width: 108px; }
+
+@media (max-width: 520px) {
+  .ed-actions .btn { flex: 1 1 100%; }
+  .ed-video { max-height: 42vh; }
+  /* 窄屏：状态下移成一行，让「编辑 / 下载」两个按钮能横向并排 */
+  .item { flex-wrap: wrap; gap: 9px 10px; padding: 12px 13px; }
+  .item-main { flex: 1 1 100%; }
+  .item-state { order: 2; }
+  .item-save { order: 4; }
+  .item-edit { order: 3; margin-left: auto; }
+  .item-del { order: 5; }
+}
 
 /* ===== 说明 ===== */
 .notes h2 { font-size: 13.5px; font-weight: 700; margin: 20px 0 8px; color: var(--text); }
@@ -466,6 +645,42 @@ body {
         <div class="prog hidden" id="prog">
           <div class="bar"><i id="bar"></i></div>
           <p class="ptxt" id="ptxt"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 编辑器：预览 + 截取 ===== -->
+    <div class="editor hidden" id="editor">
+      <div class="ed-head">
+        <div class="ed-title">
+          <span id="edname"></span>
+          <span class="ed-badge" id="edbadge">已截取</span>
+        </div>
+        <button class="ed-close" id="edclose" title="关闭">×</button>
+      </div>
+
+      <div class="ed-body">
+        <video id="edvideo" class="ed-video" controls playsinline preload="metadata"></video>
+
+        <div class="ed-trimbar">
+          <span class="ed-time" id="edstart">0.0s</span>
+          <div class="ed-track" id="edtrack">
+            <div class="ed-range" id="edrange"></div>
+            <div class="ed-handle ed-h-start" id="edhstart" data-role="start"></div>
+            <div class="ed-handle ed-h-end" id="edhend" data-role="end"></div>
+          </div>
+          <span class="ed-time" id="edend">0.0s</span>
+        </div>
+
+        <div class="ed-info">
+          <span>选区 <b id="edsel">0.0s</b></span>
+          <span class="ed-hint" id="edhint"></span>
+        </div>
+
+        <div class="ed-actions">
+          <button class="btn primary" id="edapply">截取这一段</button>
+          <button class="btn ghost" id="edrestore">还原完整视频</button>
+          <button class="btn" id="edsave">保存</button>
         </div>
       </div>
     </div>
@@ -1412,6 +1627,7 @@ async function analyzeFile(blob, { onProgress, label } = {}) {
   report('重建索引', 0.55);
   const parts = [];
   const samples = [];
+  const keys = [];      // 每帧是否关键帧，截取时用，分析阶段顺手记下不额外读盘
   let total = 0;
   let prevPts = null;
   let firstFrameRaw = null;
@@ -1432,6 +1648,7 @@ async function analyzeFile(blob, { onProgress, label } = {}) {
 
     samples.push({ size, duration: dur });
     parts.push(frameBlob);
+    keys.push(isKeyFrameRaw(raw));
     total += size;
 
     if (i % 40 === 0) report('重建索引', 0.55 + (i / ps.videoAUs.length) * 0.4);
@@ -1439,7 +1656,7 @@ async function analyzeFile(blob, { onProgress, label } = {}) {
 
   report('完成', 1);
   return {
-    params, priv, audio, parts, samples,
+    params, priv, audio, parts, samples, keys,
     firstRaw: firstFrameRaw,
     videoBytes: total,
     privateHeaderLen: ps.privateHeaderLen,
@@ -1482,6 +1699,15 @@ async function buildMp4(files, { onProgress, merge = false } = {}) {
     aParts.push(...f.audio.parts);
   }
 
+  return muxSamples({
+    primary, sps, videos, vParts, audios, aParts, videoBytes,
+    fileCount: files.length,
+    report,
+  });
+}
+
+/** 纯封装：给定时序样本和分片，写出 MP4。修复与截取共用这一条链路。 */
+function muxSamples({ primary, sps, videos, vParts, audios, aParts, videoBytes, fileCount, report }) {
   const videoDurationTicks = videos.reduce((s, x) => s + x.duration, 0);
   const videoDurationMs = Math.round(videoDurationTicks / VIDEO_TIMESCALE * 1000);
   const audioDurationTicks = audios.reduce((s, x) => s + x.duration, 0);
@@ -1592,8 +1818,130 @@ async function buildMp4(files, { onProgress, merge = false } = {}) {
       durationSec: videoDurationTicks / VIDEO_TIMESCALE,
       sampleRate, channels, codec: 'HEVC',
       size: out.size,
-      fileCount: files.length,
+      fileCount: fileCount,
       bitrate: Math.round(videoBytes * 8 / (videoDurationTicks / VIDEO_TIMESCALE) / 1000),
+    },
+  };
+}
+
+/** 判断一帧是否是关键帧（IRAP：NAL 类型 16~21，本机是 19=IDR） */
+function isKeyFrameRaw(raw) {
+  for (const n of splitAnnexB(raw)) {
+    if (n.type >= 16 && n.type <= 21) return true;
+  }
+  return false;
+}
+
+/**
+ * 标记每个样本是否为关键帧。
+ * 只在截取前调用（要多读一遍原始码流），普通修复不需要。
+ */
+async function markKeyFrames(blob, analyzed, { onProgress } = {}) {
+  const reader = new ChunkedReader(blob);
+  const ps = await scanPES(reader, {});
+  const keys = [];
+  for (let i = 0; i < ps.videoAUs.length; i++) {
+    const raw = await readAU(reader, ps.videoAUs[i]);
+    keys.push(isKeyFrameRaw(raw));
+    if (i % 60 === 0) onProgress && onProgress({ stage: '标记关键帧', pct: (i / ps.videoAUs.length) * 100 });
+  }
+  // 补齐/截断到样本数，避免 PES 与样本数量不一致时错位
+  while (keys.length < analyzed.samples.length) keys.push(false);
+  return keys.slice(0, analyzed.samples.length);
+}
+
+/**
+ * 从已分析的文件截取一段，无损（不重新编码）。
+ *
+ * @param {object} analyzed analyzeFile 的结果
+ * @param {object} opts
+ * @param {number[]} opts.keys 每帧是否关键帧（markKeyFrames 得到）
+ * @param {number} opts.startSec 期望起点（秒），会自动吸附到最近的**前一**关键帧
+ * @param {number} opts.endSec 期望终点（秒）
+ * @returns {Promise<{blob: Blob, info: object}>}
+ */
+async function trimMp4(analyzed, { keys, startSec, endSec, onProgress } = {}) {
+  const report = (stage, pct) => onProgress && onProgress({ stage, pct });
+  if (!keys) keys = analyzed.keys;   // 分析阶段已经顺手记下，通常不需要重扫
+
+  // 1. 建立帧级时间轴（累积时长，单位 90kHz tick）
+  const starts = new Array(analyzed.samples.length);
+  let acc = 0;
+  for (let i = 0; i < analyzed.samples.length; i++) {
+    starts[i] = acc;
+    acc += analyzed.samples[i].duration;
+  }
+  const totalSec = acc / VIDEO_TIMESCALE;
+
+  // 2. 秒 → 帧号（取覆盖该时刻的帧）
+  const secToFrame = (sec) => {
+    const t = Math.max(0, Math.min(sec, totalSec)) * VIDEO_TIMESCALE;
+    for (let i = 0; i < starts.length; i++) {
+      if (starts[i] + analyzed.samples[i].duration > t) return i;
+    }
+    return starts.length - 1;
+  };
+
+  // 3. 起点必须吸附到 ≤ 起点的最近关键帧，否则开头缺参考帧会花屏
+  const wantStart = secToFrame(startSec);
+  let startFrame = 0;
+  for (let i = wantStart; i >= 0; i--) {
+    if (keys[i]) { startFrame = i; break; }
+  }
+  const endFrame = secToFrame(endSec);
+
+  if (endFrame <= startFrame) throw new Error('截取区间太短，至少需要覆盖一个关键帧到下一段');
+
+  // 4. 视频切片。首帧若不是关键帧，补上参数集（防止播放器缺 SPS）
+  const sps = parseHevcSPS(analyzed.params.sps[0]);
+  const videos = [];
+  const vParts = [];
+  let videoBytes = 0;
+
+  for (let i = startFrame; i <= endFrame; i++) {
+    const s = analyzed.samples[i];
+    videos.push({ ...s });
+    vParts.push(analyzed.parts[i]);
+    videoBytes += s.size;
+  }
+
+  // 5. 音频切片：按时间窗口取交集
+  const startTick = starts[startFrame];
+  const endTick = starts[endFrame] + analyzed.samples[endFrame].duration;
+  const audios = [];
+  const aParts = [];
+  let aAcc = 0;
+  const audioDur = 1024;
+  for (let i = 0; i < analyzed.audio.samples.length; i++) {
+    const aStart = aAcc;
+    const aEnd = aAcc + audioDur;
+    aAcc = aEnd;
+    // 音频的 timescale 就是采样率，要换算到 90kHz 比较
+    const rate = analyzed.audio.cfg ? analyzed.audio.cfg.sampleRate : 16000;
+    const aStartTick = (aStart / rate) * VIDEO_TIMESCALE;
+    const aEndTick = (aEnd / rate) * VIDEO_TIMESCALE;
+    if (aEndTick <= startTick || aStartTick >= endTick) continue;
+    audios.push({ ...analyzed.audio.samples[i] });
+    aParts.push(analyzed.audio.parts[i]);
+  }
+
+  report('封装截取结果', 0.85);
+
+  const result = muxSamples({
+    primary: analyzed,
+    sps,
+    videos, vParts, audios, aParts, videoBytes,
+    fileCount: 1,
+    report: () => {},
+  });
+
+  return {
+    blob: result.blob,
+    info: {
+      ...result.info,
+      trimStartSec: starts[startFrame] / VIDEO_TIMESCALE,
+      trimEndSec: endTick / VIDEO_TIMESCALE,
+      snappedSec: Math.abs(starts[startFrame] / VIDEO_TIMESCALE - startSec) > 0.01,
     },
   };
 }
@@ -1668,32 +2016,50 @@ function addFiles(files) {
   const valid = files.filter((f) => f.size > 1024);
   if (!valid.length) return;
 
-  // 排队串行执行，避免多次选择时并发读同一批文件
-  dedupeQueue = dedupeQueue.then(async () => {
-    const existing = items.filter((it) => !it.removed).map((it) => it.file);
-    const { kept, dropped } = await dedupe(valid, existing);
+  // 排队串行执行，避免多次选择时并发读同一批文件。
+  // 关键：catch 在链内消化异常，否则一次失败会让后续所有判重都被跳过（Promise 链中毒）
+  dedupeQueue = dedupeQueue
+    .then(() => ingestFiles(valid))
+    .catch((err) => {
+      console.error('去重出错，降级为元数据判重', err);
+      ingestFilesFallback(valid);
+    });
+}
 
-    for (const d of dropped) noteDuplicate(d.file.name, d.reason, d.keptName);
+/** 正常路径：完整两层判重 */
+async function ingestFiles(valid) {
+  const existing = items.map((it) => it.file);
+  const { kept, dropped } = await dedupe(valid, existing);
 
-    if (!kept.length && !dropped.length) return;
+  for (const d of dropped) noteDuplicate(d.file.name, d.reason, d.keptName);
+  if (!kept.length && !dropped.length) return;
 
-    for (const f of kept) {
-      items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+  for (const f of kept) {
+    items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+  }
+  render();
+  panel.classList.remove('hidden');
+  dropEl.style.display = 'none';
+}
+
+/** 兜底路径：读文件失败时至少按「文件名+大小+修改时间」挡一层 */
+function ingestFilesFallback(valid) {
+  const sig = (f) => `${f.name}|${f.size}|${f.lastModified}`;
+  const seen = new Set(items.map((it) => sig(it.file)));
+
+  for (const f of valid) {
+    const s = sig(f);
+    if (seen.has(s)) {
+      const dup = items.find((it) => sig(it.file) === s);
+      noteDuplicate(f.name, `与「${dup ? dup.file.name : f.name}」是同一个文件（重复选择了一次）`, dup?.file.name || f.name);
+      continue;
     }
-    render();
-    panel.classList.remove('hidden');
-    dropEl.style.display = 'none';
-  });
-
-  dedupeQueue.catch((err) => {
-    console.error('去重出错，文件照常加入', err);
-    for (const f of valid) {
-      items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
-    }
-    render();
-    panel.classList.remove('hidden');
-    dropEl.style.display = 'none';
-  });
+    seen.add(s);
+    items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+  }
+  render();
+  panel.classList.remove('hidden');
+  dropEl.style.display = 'none';
 }
 
 /** 记录一条"已剔除重复"的提示 */
@@ -1754,7 +2120,10 @@ function render() {
         <div class="item-meta">${meta.join(' · ')}</div>
       </div>
       <span class="item-state ${stateCls}"></span>
-      ${it.status === 'done' ? `<button class="item-save" title="${isTouch ? '保存到相册' : '下载'}">${isTouch ? '存相册' : '下载'}</button>` : ''}
+      ${it.status === 'done' ? `
+        ${it.result.shared ? '' : '<button class="item-btn item-edit" title="预览与截取">编辑</button>'}
+        <button class="item-btn item-save" title="${isTouch ? '保存到相册' : '下载'}">${isTouch ? '存相册' : '下载'}</button>
+      ` : ''}
       ${!running && it.status !== 'done' ? '<button class="item-del" title="移除">×</button>' : ''}
     `;
     el.querySelector('.item-name').textContent = it.file.name;
@@ -1762,8 +2131,14 @@ function render() {
     const save = el.querySelector('.item-save');
     if (save) save.addEventListener('click', async (ev) => {
       ev.stopPropagation();
-      const r = await saveFile(it.result.blob, it.result.name);
-      afterSave(r, it.result.name);
+      const target = it.trimResult || it.result;
+      const r = await saveFile(target.blob, target.name);
+      afterSave(r, target.name);
+    });
+    const edit = el.querySelector('.item-edit');
+    if (edit) edit.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      openEditor(it);
     });
     const del = el.querySelector('.item-del');
     if (del) del.addEventListener('click', () => {
@@ -2023,6 +2398,209 @@ listEl.addEventListener('click', async (e) => {
     const r = await saveFile(it.result.blob, it.result.name);
     afterSave(r, it.result.name);
   }
+});
+
+// ==================== 编辑器：预览 + 截取 ====================
+
+/** 当前正在编辑的条目 */
+let edItem = null;
+/** 选区（秒） */
+let edStart = 0;
+let edEnd = 0;
+/** 当前视频总时长（秒），来自已修复结果 */
+let edDuration = 0;
+/** 编辑器里正在显示的是截取结果还是完整视频 */
+let edShowingTrim = false;
+
+function openEditor(it) {
+  edItem = it;
+  edDuration = it.info?.durationSec || 0;
+  edShowingTrim = false;
+
+  const ed = $('editor');
+  ed.classList.remove('hidden');
+  $('edname').textContent = it.result.name;
+  $('edbadge').classList.add('hidden');
+
+  // 预览用修复后的完整视频
+  edSetVideo(it.result.blob);
+  edResetRange();
+  syncEdUI();
+
+  ed.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function edSetVideo(blob) {
+  const v = $('edvideo');
+  if (v.dataset.url) URL.revokeObjectURL(v.dataset.url);
+  const url = URL.createObjectURL(blob);
+  v.dataset.url = url;
+  v.src = url;
+}
+
+function edResetRange() {
+  edStart = 0;
+  edEnd = edDuration;
+  syncRangeUI();
+}
+
+/** 把 edStart/edEnd 画到时间轴上 */
+function syncRangeUI() {
+  const track = $('edtrack');
+  const w = track.clientWidth || 1;
+  const p = (s) => Math.max(0, Math.min(1, edDuration ? s / edDuration : 0)) * w;
+  const a = p(edStart);
+  const b = p(edEnd);
+  $('edrange').style.left = a + 'px';
+  $('edrange').style.width = Math.max(0, b - a) + 'px';
+  $('edhstart').style.left = a + 'px';
+  $('edhend').style.left = b + 'px';
+  $('edstart').textContent = fmtSec(edStart);
+  $('edend').textContent = fmtSec(edDuration);
+  $('edsel').textContent = `${fmtSec(edStart)} → ${fmtSec(edEnd)}（${(edEnd - edStart).toFixed(1)}s）`;
+
+  // 提示吸附情况
+  const hint = $('edhint');
+  if (edStart > 0.05 && Math.abs(edStart - Math.round(edStart)) > 0.05) {
+    hint.textContent = '起点会自动吸附到最近的完整关键帧';
+  } else hint.textContent = '';
+}
+
+function syncEdUI() {
+  const hasSel = edEnd - edStart > 0.2 && (edStart > 0.05 || edEnd < edDuration - 0.05);
+  $('edbadge').classList.toggle('hidden', !edShowingTrim);
+  $('edrestore').classList.toggle('hidden', !edShowingTrim);
+
+  // 已经截取过时不允许再"截取一次"：滑块此刻在原片时间轴上已失效，
+  // 再按一次会拿原片数据去截，结果和用户看到的不是一回事。
+  if (edShowingTrim) {
+    $('edapply').textContent = '已截取 — 如需重选请先还原';
+    $('edapply').disabled = true;
+  } else {
+    $('edapply').textContent = hasSel ? '截取这一段' : '拖动滑块选择区间';
+    $('edapply').disabled = !hasSel;
+  }
+}
+
+/** 秒 → "1:23.4" */
+function fmtSec(s) {
+  if (!isFinite(s)) return '0.0s';
+  const m = Math.floor(s / 60);
+  const r = s - m * 60;
+  if (m === 0) return `${r.toFixed(1)}s`;
+  return `${m}:${r < 10 ? '0' : ''}${r.toFixed(1)}`;
+}
+
+/** 拖动时间轴 */
+(function bindTrimBar() {
+  const track = $('edtrack');
+  let dragging = null;
+
+  const posToSec = (clientX) => {
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return ratio * edDuration;
+  };
+
+  const pick = (clientX) => {
+    const s = posToSec(clientX);
+    // 靠近哪个把手就拖哪个
+    return Math.abs(s - edStart) <= Math.abs(s - edEnd) ? 'start' : 'end';
+  };
+
+  const onDown = (e) => {
+    if (!edDuration) return;
+    const role = e.target.dataset?.role;
+    dragging = role || pick(e.clientX);
+    track.setPointerCapture?.(e.pointerId);
+    onMove(e);
+    e.preventDefault();
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    const s = posToSec(e.clientX);
+    if (dragging === 'start') {
+      edStart = Math.max(0, Math.min(s, edEnd - 0.2));
+    } else {
+      edEnd = Math.min(edDuration, Math.max(s, edStart + 0.2));
+    }
+    syncRangeUI();
+    syncEdUI();
+    // 拖动时让预览跟着走，方便找位置
+    const v = $('edvideo');
+    if (v && isFinite(v.duration)) v.currentTime = dragging === 'start' ? edStart : edEnd;
+  };
+
+  const onUp = () => { dragging = null; };
+
+  track.addEventListener('pointerdown', onDown);
+  track.addEventListener('pointermove', onMove);
+  track.addEventListener('pointerup', onUp);
+  track.addEventListener('pointercancel', onUp);
+})();
+
+$('edclose').addEventListener('click', () => {
+  $('editor').classList.add('hidden');
+  const v = $('edvideo');
+  if (v.dataset.url) { URL.revokeObjectURL(v.dataset.url); delete v.dataset.url; }
+  v.removeAttribute('src');
+  edItem = null;
+});
+
+$('edapply').addEventListener('click', async () => {
+  if (!edItem) return;
+  const btn = $('edapply');
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '截取中…';
+  try {
+    const analyzed = edItem.analyzed;
+    if (!analyzed) throw new Error('缺少分析数据，请重新修复后再试');
+    const r = await trimMp4(analyzed, { startSec: edStart, endSec: edEnd });
+
+    const base = edItem.result.name.replace(/\.mp4$/i, '');
+    const t0 = Math.round(r.info.trimStartSec);
+    const t1 = Math.round(r.info.trimEndSec);
+    const name = `${base}_${t0}s-${t1}s.mp4`;
+    edItem.trimResult = { blob: r.blob, name };
+    edShowingTrim = true;
+    edSetVideo(r.blob);
+    // 时间轴跟随新视频长度，否则滑块还停在原片 88s 的坐标上，看起来对不上
+    edDuration = r.info.durationSec;
+    edStart = 0;
+    edEnd = edDuration;
+    syncRangeUI();
+    $('edbadge').textContent = `已截取 ${fmtSec(r.info.trimStartSec)}→${fmtSec(r.info.trimEndSec)}`;
+    syncEdUI();
+    showToast(`已截取 ${(r.info.durationSec).toFixed(1)} 秒，可点「保存」导出`);
+    render();
+  } catch (err) {
+    console.error(err);
+    showToast('截取失败：' + (err.message || '未知错误'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+});
+
+$('edrestore').addEventListener('click', () => {
+  if (!edItem) return;
+  edItem.trimResult = null;
+  edShowingTrim = false;
+  edDuration = edItem.info?.durationSec || 0;
+  edSetVideo(edItem.result.blob);
+  edResetRange();
+  syncEdUI();
+  render();
+  showToast('已还原为完整视频');
+});
+
+$('edsave').addEventListener('click', async () => {
+  if (!edItem) return;
+  const target = edItem.trimResult || edItem.result;
+  const r = await saveFile(target.blob, target.name);
+  afterSave(r, target.name);
 });
 
 dlAllBtn.addEventListener('click', async () => {
