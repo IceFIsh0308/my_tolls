@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1115">
+<title>记录仪视频修复</title>
+
+<style>
+:root {
+  --bg: #0f1115;
+  --card: #171a21;
+  --card-2: #1e222b;
+  --line: #272c37;
+  --text: #e8eaef;
+  --dim: #9aa2b1;
+  --dim-2: #6b7280;
+  --accent: #4a9eff;
+  --accent-dim: #2c6cb8;
+  --ok: #3ecf8e;
+  --warn: #f5a524;
+  --err: #f2555a;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+               "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+/* ---------- 头部 ---------- */
+.head { padding: 44px 0 26px; }
+.head h1 {
+  margin: 0 0 8px;
+  font-size: 27px;
+  font-weight: 620;
+  letter-spacing: -0.4px;
+}
+.sub { margin: 0; color: var(--dim); font-size: 14px; }
+
+/* ---------- 拖放区 ---------- */
+.drop {
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  transition: border-color .18s, background .18s;
+  cursor: pointer;
+}
+.drop:active, .drop.over {
+  border-color: var(--accent);
+  background: var(--card-2);
+}
+.drop-inner { padding: 46px 24px; text-align: center; }
+.ico {
+  width: 34px; height: 34px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  opacity: .9;
+}
+.tip { margin: 0 0 6px; font-size: 15px; font-weight: 500; }
+.hint { margin: 0; font-size: 12.5px; color: var(--dim-2); line-height: 1.55; }
+
+/* ---------- 面板 ---------- */
+.panel { margin-top: 22px; }
+.hidden { display: none !important; }
+
+.opts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.opt-name { font-size: 13.5px; color: var(--dim); flex-shrink: 0; }
+
+.seg {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg-btn {
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 6px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.seg-btn.active { background: var(--accent); color: #fff; font-weight: 520; }
+
+/* ---------- 文件列表 ---------- */
+.list { display: flex; flex-direction: column; gap: 9px; }
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+.item-main { flex: 1; min-width: 0; }
+.item-name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.item-meta {
+  font-size: 12px;
+  color: var(--dim-2);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.item-state {
+  font-size: 12px;
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--card-2);
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.item-state.ok { color: var(--ok); background: rgba(62,207,142,.10); }
+.item-state.err { color: var(--err); background: rgba(242,85,90,.10); }
+.item-state.work { color: var(--accent); background: rgba(74,158,255,.10); }
+
+.item-del {
+  border: 0;
+  background: transparent;
+  color: var(--dim-2);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+.item-del:hover { color: var(--err); }
+
+/* ---------- 操作 ---------- */
+.actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.btn {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 12px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, opacity .15s, transform .1s;
+}
+.btn:active { transform: scale(.98); }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  flex: 1;
+  min-width: 150px;
+  font-weight: 560;
+}
+.btn.primary:disabled { opacity: .5; cursor: default; }
+.btn.ghost { background: transparent; color: var(--dim); }
+
+/* ---------- 进度 ---------- */
+.prog { margin-top: 16px; }
+.bar {
+  height: 5px;
+  background: var(--card-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width .22s ease;
+}
+.ptxt {
+  margin: 9px 0 0;
+  font-size: 12.5px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 说明 ---------- */
+.notes { margin-top: 42px; padding-top: 26px; border-top: 1px solid var(--line); }
+.notes h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 22px 0 8px;
+}
+.notes h2:first-child { margin-top: 0; }
+.notes p, .notes li { font-size: 13px; color: var(--dim); line-height: 1.72; margin: 0 0 8px; }
+.notes ul { margin: 0; padding-left: 19px; }
+.notes code {
+  background: var(--card-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (max-width: 420px) {
+  .wrap { padding: 0 15px 48px; }
+  .head { padding: 30px 0 20px; }
+  .head h1 { font-size: 23px; }
+  .drop-inner { padding: 36px 18px; }
+  .opt { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .seg { width: 100%; }
+  .seg-btn { flex: 1; text-align: center; padding: 7px 8px; }
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <h1>记录仪视频修复</h1>
+    <p class="sub">海康 / 小鹏记录仪的「伪装 mp4」→ 标准 MP4。无损重封装，画质一帧不动。</p>
+  </header>
+
+  <section id="drop" class="drop">
+    <input id="file" type="file" multiple accept="video/*,.mp4,.MP4,.264,.ts,.ps" hidden>
+    <div class="drop-inner">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/>
+      </svg>
+      <p class="tip">点这里选择视频，或把文件拖进来</p>
+      <p class="hint">支持一次选多个文件。文件不会离开你的设备，全程在浏览器本地处理。</p>
+    </div>
+  </section>
+
+  <section id="panel" class="panel hidden">
+    <div class="opts">
+      <label class="opt">
+        <span class="opt-name">输出方式</span>
+        <div class="seg" id="modeSeg">
+          <button class="seg-btn active" data-mode="single">分开输出</button>
+          <button class="seg-btn" data-mode="merge">合并成一条</button>
+        </div>
+      </label>
+      <label class="opt" id="mergeOpt" hidden>
+        <span class="opt-name">合并顺序</span>
+        <div class="seg" id="orderSeg">
+          <button class="seg-btn active" data-order="time">按录制时间</button>
+          <button class="seg-btn" data-order="name">按文件名</button>
+        </div>
+      </label>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="actions">
+      <button id="run" class="btn primary">开始修复</button>
+      <button id="dlall" class="btn hidden">全部下载</button>
+      <button id="reset" class="btn ghost">清空</button>
+    </div>
+    <div class="prog hidden" id="prog">
+      <div class="bar"><i id="bar"></i></div>
+      <p class="ptxt" id="ptxt"></p>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>为什么要修</h2>
+    <p>这类记录仪的文件扩展名写着 <code>.mp4</code>，里面其实不是 MP4，而是 <b>MPEG-PS</b> 流，前面还垫了 256KB 的私有头。播放器按 MP4 规范去找 <code>ftyp</code> 找不到，就放弃；剪辑软件按文件长度硬算时长，于是 2 分钟显示成 2 小时，尾部还会绿屏。</p>
+    <p>修法是<b>把外壳换掉</b>：剥掉私有头，把里面的 H.265 码流重新包进标准 MP4 容器。不解码、不重编码，所以画质和原片完全一致。</p>
+    <h2>支持情况</h2>
+    <ul>
+      <li>视频编码 HEVC (H.265) / 音频 AAC 的记录仪文件</li>
+      <li>iPhone / iPad Safari、Mac、Windows、Android 均可使用</li>
+      <li>大文件（数百 MB 到数 GB）建议用电脑处理，手机内存有限</li>
+    </ul>
+  </section>
+</div>
+
+<script type="module">
+// ===== src/chunkreader.js =====
+/**
+ * 分块访问器：把 Blob 当成可随机读的文件，但把「读窗口」做大。
+ *
+ * 为什么要这层：浏览器里每次 Blob.slice().arrayBuffer() 都要过一遍 IPC + 复制，
+ * 4K 记录仪一帧被拆成十几段 PES，逐段读会让 2650 帧变成几万次系统调用，
+ * 实测慢 20 倍以上。这里按 32MB 窗口一次读进来，帧数据直接从窗口里切。
+ *
+ * 关键：切出来的 Uint8Array 是窗口的视图，窗口被换掉后会失效，
+ * 所以凡是跨窗口要长期持有的数据，必须 copy() 出去。
+ */
+
+const WINDOW = 32 * 1024 * 1024;
+
+class ChunkedReader {
+  constructor(blob, { windowSize = WINDOW } = {}) {
+    this.blob = blob;
+    this.size = blob.size;
+    this.windowSize = windowSize;
+    this.start = 0;
+    this.buf = null;
+  }
+
+  /** 保证 [offset, offset+len) 在窗口内；超出单窗口大小则直接单独读 */
+  async ensure(offset, len) {
+    if (len > this.windowSize) return false;
+    if (this.buf && offset >= this.start && offset + len <= this.start + this.buf.length) return true;
+    // 窗口以 offset 为起点，避免反复重读已消费区域
+    const start = Math.min(offset, Math.max(0, this.size - this.windowSize));
+    const end = Math.min(start + this.windowSize, this.size);
+    const ab = await this.blob.slice(start, end).arrayBuffer();
+    this.buf = new Uint8Array(ab);
+    this.start = start;
+    return true;
+  }
+
+  /** 返回 offset 处的视图（不复制，调用方别长期持有） */
+  async view(offset, len) {
+    const end = Math.min(offset + len, this.size);
+    if (len > this.windowSize) {
+      const ab = await this.blob.slice(offset, end).arrayBuffer();
+      return new Uint8Array(ab);
+    }
+    if (!(await this.ensure(offset, end - offset))) {
+      const ab = await this.blob.slice(offset, end).arrayBuffer();
+      return new Uint8Array(ab);
+    }
+    return this.buf.subarray(offset - this.start, end - this.start);
+  }
+
+  /** 返回 offset 处的独立副本（可长期持有） */
+  async copy(offset, len) {
+    const v = await this.view(offset, len);
+    return v.slice();
+  }
+
+  /** 读取若干个不连续区间并拼接（用于跨 PES 的一帧） */
+  async gather(parts) {
+    const total = parts.reduce((s, p) => s + p.len, 0);
+    const out = new Uint8Array(total);
+    let o = 0;
+    for (const p of parts) {
+      const v = await this.view(p.off, p.len);
+      out.set(v, o);
+      o += p.len;
+    }
+    return out;
+  }
+}
+
+
+// ===== src/hevcSps.js =====
+/**
+ * HEVC SPS 解析 —— 只为构造 hvcC 所需的最小字段集
+ *
+ * 关键：profile_tier_level 的前 96 bit 与 hvcC 中的
+ * general_profile_space/tier/profile_idc + compatibility_flags
+ * + constraint_indicator_flags + level_idc 完全一一对应，
+ * 因此可以原样搬运，不需要逐字段解释 43 个 constraint flag。
+ */
+
+class BitReader {
+  constructor(buf, byteOffset = 0) {
+    this.buf = buf;
+    this.pos = byteOffset * 8;
+    this.end = buf.length * 8;
+  }
+  bit() {
+    if (this.pos >= this.end) throw new Error('bit overflow');
+    const v = (this.buf[this.pos >> 3] >> (7 - (this.pos & 7))) & 1;
+    this.pos++;
+    return v;
+  }
+  bits(n) {
+    let v = 0;
+    for (let i = 0; i < n; i++) v = v * 2 + this.bit();
+    return v;
+  }
+  skip(n) { this.pos += n; }
+  ue() {
+    let zeros = 0;
+    while (this.bit() === 0) { if (++zeros > 32) throw new Error('ue overflow'); }
+    if (zeros === 0) return 0;
+    return (2 ** zeros - 1) + this.bits(zeros);
+  }
+  se() {
+    const k = this.ue();
+    return (k & 1) ? (k + 1) / 2 : -(k / 2);
+  }
+  byteAlign() { this.pos = Math.ceil(this.pos / 8) * 8; }
+}
+
+/** 去除防竞争字节 00 00 03 */
+function unescapeRbsp(buf, start = 0) {
+  const out = new Uint8Array(buf.length);
+  let n = 0, zeros = 0;
+  for (let i = start; i < buf.length; i++) {
+    const b = buf[i];
+    if (zeros >= 2 && b === 0x03) { zeros = 0; continue; }
+    out[n++] = b;
+    zeros = (b === 0) ? zeros + 1 : 0;
+  }
+  return out.subarray(0, n);
+}
+
+/**
+ * 解析 HEVC SPS
+ * @param {Uint8Array} nal 完整 NAL（含 2 字节 nal header，不含 start code）
+ */
+function parseHevcSPS(nal) {
+  const rbsp = unescapeRbsp(nal, 2);
+  const r = new BitReader(rbsp);
+
+  const vpsId = r.bits(4);
+  const maxSubLayersMinus1 = r.bits(3);
+  const temporalIdNested = r.bit();
+
+  // ---- profile_tier_level(1, maxSubLayersMinus1) ----
+  const ptlStartBit = r.pos;
+  const generalProfileSpace = r.bits(2);
+  const generalTierFlag = r.bits(1);
+  const generalProfileIdc = r.bits(5);
+  const compatFlags = r.bits(32);
+  const constraint1 = r.bits(24);   // 前 24 bit
+  const constraint2 = r.bits(24);   // 后 24 bit
+  const generalLevelIdc = r.bits(8);
+  // 上述 96 bit 即 hvcC 的 profile/tier/level 部分
+
+  // sub-layer 相关的 profile/level 存在性
+  const subLayerProfilePresent = [];
+  const subLayerLevelPresent = [];
+  for (let i = 0; i < maxSubLayersMinus1; i++) {
+    subLayerProfilePresent.push(r.bit());
+    subLayerLevelPresent.push(r.bit());
+  }
+  if (maxSubLayersMinus1 > 0) {
+    for (let i = maxSubLayersMinus1; i < 8; i++) r.skip(2); // reserved_zero_2bits
+  }
+  for (let i = 0; i < maxSubLayersMinus1; i++) {
+    if (subLayerProfilePresent[i]) r.skip(88);
+    if (subLayerLevelPresent[i]) r.skip(8);
+  }
+
+  // ---- 画面参数 ----
+  const spsId = r.ue();
+  const chromaFormatIdc = r.ue();
+  let separateColourPlane = 0;
+  if (chromaFormatIdc === 3) separateColourPlane = r.bit();
+  const width = r.ue();
+  const height = r.ue();
+  const conformanceWindowFlag = r.bit();
+  let cropL = 0, cropR = 0, cropT = 0, cropB = 0;
+  if (conformanceWindowFlag) {
+    cropL = r.ue(); cropR = r.ue(); cropT = r.ue(); cropB = r.ue();
+  }
+  const bitDepthLumaMinus8 = r.ue();
+  const bitDepthChromaMinus8 = r.ue();
+
+  // 计算显示尺寸（考虑裁剪，SubWidthC/SubHeightC）
+  const subW = chromaFormatIdc === 1 ? 2 : chromaFormatIdc === 2 ? 2 : 1;
+  const subH = chromaFormatIdc === 1 ? 2 : chromaFormatIdc === 2 ? 1 : 1;
+  const displayWidth = width - (cropL + cropR) * subW;
+  const displayHeight = height - (cropT + cropB) * subH;
+
+  return {
+    generalProfileSpace,
+    generalTierFlag,
+    generalProfileIdc,
+    compatFlags,
+    constraint1,
+    constraint2,
+    generalLevelIdc,
+    maxSubLayersMinus1,
+    temporalIdNested,
+    chromaFormatIdc,
+    separateColourPlane,
+    width,
+    height,
+    displayWidth,
+    displayHeight,
+    bitDepthLumaMinus8,
+    bitDepthChromaMinus8,
+  };
+}
+
+/** 从 NAL 集合构造 hvcC box 内容（不含 box header 与长度） */
+function buildHvcC(sps, nalArrays) {
+  const out = [];
+  const push = (v) => out.push(v & 0xff);
+
+  push(1); // configurationVersion
+  push((sps.generalProfileSpace << 6) | (sps.generalTierFlag << 5) | sps.generalProfileIdc);
+
+  // general_profile_compatibility_flags: 32 bit 大端
+  push((sps.compatFlags >>> 24) & 0xff);
+  push((sps.compatFlags >>> 16) & 0xff);
+  push((sps.compatFlags >>> 8) & 0xff);
+  push(sps.compatFlags & 0xff);
+
+  // general_constraint_indicator_flags: 48 bit
+  for (let i = 5; i >= 0; i--) push((i >= 3 ? sps.constraint1 >>> ((i - 3) * 8) : sps.constraint2 >>> (i * 8)) & 0xff);
+
+  push(sps.generalLevelIdc);
+
+  // min_spatial_segmentation_idc (12 bit, reserved 4 bit = 1111)
+  push(0xf0); push(0x00);
+  // parallelismType (6 bit, reserved 2 bit = 11)
+  push(0xfc);
+  // chromaFormat (6 bit, reserved 2 bit = 11)
+  push(0xfc | (sps.chromaFormatIdc & 0x03));
+  // bitDepthLumaMinus8 (5 bit, reserved 3 bit = 111)
+  push(0xf8 | (sps.bitDepthLumaMinus8 & 0x07));
+  // bitDepthChromaMinus8
+  push(0xf8 | (sps.bitDepthChromaMinus8 & 0x07));
+  // avgFrameRate
+  push(0); push(0);
+  // constantFrameRate(2) numTemporalLayers(3) temporalIdNested(1) lengthSizeMinusOne(2)
+  const numTemporalLayers = Math.min(7, sps.maxSubLayersMinus1 + 1);
+  push((0 << 6) | ((numTemporalLayers & 0x07) << 3) | ((sps.temporalIdNested & 1) << 2) | 3);
+
+  // numOfArrays
+  push(nalArrays.length);
+  for (const arr of nalArrays) {
+    push(0x80 | (arr.nalType & 0x3f)); // array_completeness=1
+    push(0); push(arr.nals.length & 0xffff); // numNalus
+    for (const nal of arr.nals) {
+      push((nal.length >> 8) & 0xff);
+      push(nal.length & 0xff);
+      for (let i = 0; i < nal.length; i++) push(nal[i]);
+    }
+  }
+  return new Uint8Array(out);
+}
+
+/** AAC AudioSpecificConfig（2 字节常见情形）*/
+function buildAudioSpecificConfig(objectType, sampleRateIndex, channelConfig) {
+  const b0 = ((objectType & 0x1f) << 3) | ((sampleRateIndex >> 1) & 0x07);
+  const b1 = ((sampleRateIndex & 0x01) << 7) | ((channelConfig & 0x0f) << 3);
+  return new Uint8Array([b0, b1]);
+}
+
+
+// ===== src/psdemux.js =====
+/**
+ * MPEG-PS (节目流) 解封装 —— 针对海康记录仪的「伪 mp4」
+ *
+ * 实测结构：
+ *   [0, 0x40000)   私有头：索引/时长/缩略图/起止时间戳
+ *   [0x40000, EOF) MPEG-PS：00 00 01 BA 包着若干 PES
+ *   4K 单帧远超 PES 长度上限(65535)，一帧被拆成多个 PES：
+ *   带 PTS 的 PES 标记「新帧开始」，其后无 PTS 的为续包。
+ */
+
+const MAX_WINDOW = 32 * 1024 * 1024;
+
+function readU16(b, o) { return (b[o] << 8) | b[o + 1]; }
+
+function parsePts(b, o) {
+  if ((b[o] & 0x01) === 0) return null;
+  return (
+    ((b[o] >> 1) & 0x07) * 1073741824 +
+    (b[o + 1] << 22) +
+    ((b[o + 2] >> 1) << 15) +
+    (b[o + 3] << 7) +
+    ((b[o + 4] >> 1))
+  );
+}
+
+async function readAt(blob, offset, len) {
+  if (blob.view) return blob.view(offset, len);
+  const end = Math.min(offset + len, blob.size);
+  const ab = await blob.slice(offset, end).arrayBuffer();
+  return new Uint8Array(ab);
+}
+
+/** 定位真实 PS 流起点 */
+async function locateStreamStart(blob, scanLimit = 8 * 1024 * 1024) {
+  const limit = Math.min(blob.size, scanLimit);
+  let pos = 0;
+  while (pos < limit) {
+    const len = Math.min(MAX_WINDOW, limit - pos);
+    const buf = await readAt(blob, pos, len);
+    for (let i = 0; i + 32 < buf.length; i++) {
+      if (buf[i] === 0 && buf[i + 1] === 0 && buf[i + 2] === 1 && buf[i + 3] === 0xba) {
+        // 在该 pack 内找带 PTS 的 video PES
+        const stop = Math.min(buf.length, i + 2048);
+        for (let j = i + 4; j + 24 < stop; j++) {
+          if (buf[j] === 0 && buf[j + 1] === 0 && buf[j + 2] === 1 && buf[j + 3] === 0xe0) {
+            if (buf[j + 7] & 0x80) {
+              const pts = parsePts(buf, j + 9);
+              if (pts && pts > 0 && pts < 1e12) return pos + i;
+            }
+            break;
+          }
+        }
+      }
+    }
+    pos += Math.max(1, len - 4);
+  }
+  return -1;
+}
+
+/** 扫描整个 PS，收集所有 PES 偏移（不保留数据） */
+async function scanPES(blob, { onProgress } = {}) {
+  const streamStart = await locateStreamStart(blob);
+  if (streamStart < 0) throw new Error('不是该记录仪格式：找不到 MPEG-PS 流起点');
+
+  const video = [];
+  const audio = [];
+  const size = blob.size;
+  let pos = streamStart;
+  let lastProgress = 0;
+
+  while (pos + 9 < size) {
+    const want = Math.min(MAX_WINDOW, size - pos);
+    const buf = await readAt(blob, pos, want);
+    if (buf.length < 9) break;
+
+    // 安全区：保留尾部 64KB（最大 PES 长度）留给下一轮，避免 PES 跨窗口被截断
+    const SAFE = Math.min(buf.length, Math.max(0, buf.length - 70000));
+    let i = 0;
+    while (i + 9 < SAFE) {
+      if (buf[i] !== 0 || buf[i + 1] !== 0 || buf[i + 2] !== 1) { i++; continue; }
+      const id = buf[i + 3];
+      const len = readU16(buf, i + 4);
+
+      if (id === 0xe0 || id === 0xc0) {
+        if (len > 0) {
+          const hl = buf[i + 8];
+          const payOff = i + 9 + hl;
+          const pesEnd = i + 6 + len;
+          if (pesEnd <= buf.length && payOff < pesEnd) {
+            const pts = (buf[i + 7] & 0x80) ? parsePts(buf, i + 9) : null;
+            const absOff = pos + payOff;
+            const payLen = pesEnd - payOff;
+            if (id === 0xe0) video.push({ off: absOff, len: payLen, pts });
+            else audio.push({ off: absOff, len: payLen, pts });
+            i = pesEnd;
+            continue;
+          }
+        } else {
+          // 不定长（罕见）：跳过整个窗口，交给后续窗口处理
+          i = SAFE;
+          continue;
+        }
+      } else if (id === 0xba) {
+        i += 14;
+        continue;
+      } else if (len > 0) {
+        const skipTo = i + 6 + len;
+        i = skipTo <= buf.length ? skipTo : SAFE;
+        continue;
+      }
+      i += 4;
+    }
+
+    pos += Math.max(1, i);
+    if (onProgress && pos - lastProgress > 8 * 1024 * 1024) {
+      lastProgress = pos;
+      onProgress(pos / size);
+    }
+  }
+
+  // 分组：带 PTS 的 video PES 开新帧，无 PTS 的为续包
+  const videoAUs = [];
+  let cur = null;
+  for (const p of video) {
+    if (p.pts !== null) {
+      if (cur) videoAUs.push(cur);
+      cur = { parts: [{ off: p.off, len: p.len }], pts: p.pts };
+    } else if (cur) {
+      cur.parts.push({ off: p.off, len: p.len });
+    }
+  }
+  if (cur) videoAUs.push(cur);
+
+  return {
+    streamStart,
+    privateHeaderLen: streamStart,
+    videoAUs,
+    audioPES: audio.filter((a) => a.pts !== null),
+    size,
+  };
+}
+
+/** 读取一个 AU 的完整字节；第二个参数可以是 Blob 或 ChunkedReader */
+async function readAU(src, au) {
+  if (au.parts.length === 1) {
+    const p = au.parts[0];
+    return src.copy ? src.copy(p.off, p.len) : readAt(src, p.off, p.len);
+  }
+  if (src.gather) return src.gather(au.parts);
+  const total = au.parts.reduce((s, p) => s + p.len, 0);
+  const out = new Uint8Array(total);
+  let o = 0;
+  for (const p of au.parts) {
+    const b = await readAt(src, p.off, p.len);
+    out.set(b.subarray(0, p.len), o);
+    o += p.len;
+  }
+  return out;
+}
+
+/** 按 Annex-B 拆 NAL */
+function splitAnnexB(buf) {
+  const n = buf.length;
+  const starts = [];
+  let i = 0;
+  while (i + 3 <= n) {
+    if (buf[i] === 0 && buf[i + 1] === 0 && buf[i + 2] === 1) {
+      starts.push({ pos: i, scLen: 3 });
+      i += 3;
+    } else i++;
+  }
+  const out = [];
+  for (let k = 0; k < starts.length; k++) {
+    const s = starts[k];
+    const hdr = s.pos + s.scLen;
+    if (hdr + 1 >= n) continue;
+    const type = (buf[hdr] >> 1) & 0x3f;
+    const end = k + 1 < starts.length ? starts[k + 1].pos : n;
+    out.push({ type, start: s.pos, dataStart: hdr, dataEnd: end });
+  }
+  return out;
+}
+
+/** 私有头起止时间戳（小端 unix 秒） */
+function parsePrivateHeader(buf) {
+  const u32le = (o) => o + 4 <= buf.length
+    ? (buf[o] | (buf[o + 1] << 8) | (buf[o + 2] << 16) | (buf[o + 3] << 24)) >>> 0
+    : 0;
+  const ok = (v) => v > 1600000000 && v < 2200000000;
+  const info = {};
+  const a = u32le(0x24), b = u32le(0x14);
+  if (ok(a)) info.startTs = a;
+  if (ok(b)) info.endTs = b;
+  return info;
+}
+
+const ADTS_RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+
+function parseAdts(b, o) {
+  if (b[o] !== 0xff || (b[o + 1] & 0xf0) !== 0xf0) return null;
+  const srIdx = (b[o + 2] >> 2) & 0x0f;
+  const chCfg = ((b[o + 2] & 0x01) << 2) | ((b[o + 3] >> 6) & 0x03);
+  const frameLen = ((b[o + 3] & 0x03) << 11) | (b[o + 4] << 3) | ((b[o + 5] >> 5) & 0x07);
+  return {
+    objectType: ((b[o + 2] >> 6) & 0x03) + 1,
+    sampleRateIndex: srIdx,
+    sampleRate: ADTS_RATES[srIdx] || 0,
+    channels: chCfg || 2,
+    frameLen,
+    headerLen: (b[o + 1] & 0x01) ? 7 : 9,
+  };
+}
+
+
+// ===== src/mp4writer.js =====
+/**
+ * 最小可用 MP4 (ISO BMFF) 封装器
+ *
+ * 只做一件事：把「按顺序排列的 HEVC/AAC access unit」写成标准 MP4
+ * 不做解码、不做转码、不碰像素 —— 纯粹搬字节 + 写索引
+ *
+ * 支持的品牌与结构：
+ *   ftyp(isom/iso2/mp41) → moov(mvhd/trak*mdia/minf/stbl) → mdat
+ */
+
+/** 大端写入工具 */
+class ByteWriter {
+  constructor(initial = 1 << 20) {
+    this.buf = new Uint8Array(initial);
+    this.len = 0;
+  }
+  ensure(n) {
+    if (this.len + n <= this.buf.length) return;
+    let cap = this.buf.length;
+    while (cap < this.len + n) cap *= 2;
+    const nb = new Uint8Array(cap);
+    nb.set(this.buf.subarray(0, this.len));
+    this.buf = nb;
+  }
+  u8(v) { this.ensure(1); this.buf[this.len++] = v & 0xff; }
+  u16(v) { this.ensure(2); this.buf[this.len++] = (v >> 8) & 0xff; this.buf[this.len++] = v & 0xff; }
+  u24(v) { this.ensure(3); this.buf[this.len++] = (v >> 16) & 0xff; this.buf[this.len++] = (v >> 8) & 0xff; this.buf[this.len++] = v & 0xff; }
+  u32(v) {
+    this.ensure(4);
+    this.buf[this.len++] = (v >>> 24) & 0xff;
+    this.buf[this.len++] = (v >>> 16) & 0xff;
+    this.buf[this.len++] = (v >>> 8) & 0xff;
+    this.buf[this.len++] = v & 0xff;
+  }
+  u64(v) {
+    const hi = Math.floor(v / 4294967296);
+    const lo = v >>> 0;
+    this.u32(hi); this.u32(lo);
+  }
+  fourcc(s) {
+    this.ensure(4);
+    for (let i = 0; i < 4; i++) this.buf[this.len++] = s.charCodeAt(i) & 0xff;
+  }
+  bytes(b) { this.ensure(b.length); this.buf.set(b, this.len); this.len += b.length; }
+  zeros(n) { this.ensure(n); this.len += n; }
+  toU8() { return this.buf.subarray(0, this.len); }
+}
+
+/** box 构造辅助：先写占位长度，回头补 */
+const boxStack = [];
+function box(w, type, fn) {
+  const start = w.len;
+  w.u32(0);          // 占位
+  w.fourcc(type);
+  fn();
+  const size = w.len - start;
+  const b = w.buf;
+  b[start] = (size >>> 24) & 0xff;
+  b[start + 1] = (size >>> 16) & 0xff;
+  b[start + 2] = (size >>> 8) & 0xff;
+  b[start + 3] = size & 0xff;
+  return size;
+}
+
+function fullBox(w, type, version, flags, fn) {
+  box(w, type, () => {
+    w.u8(version);
+    w.u24(flags);
+    fn();
+  });
+}
+
+/** ftyp */
+function writeFtyp(w, majorBrand = 'isom', brands = ['isom', 'iso2', 'mp41']) {
+  box(w, 'ftyp', () => {
+    w.fourcc(majorBrand);
+    w.u32(512);
+    for (const b of brands) w.fourcc(b);
+  });
+}
+
+/** mvhd */
+function writeMvhd(w, { timescale = 1000, duration = 0, nextTrackId = 3 }) {
+  fullBox(w, 'mvhd', 0, 0, () => {
+    w.u32(0);           // creation_time
+    w.u32(0);           // modification_time
+    w.u32(timescale);
+    w.u32(duration);
+    w.u32(0x00010000);  // rate 1.0
+    w.u16(0x0100);      // volume 1.0
+    w.zeros(2);
+    w.zeros(8);         // reserved
+    const m = [0x00010000, 0, 0, 0, 0x00010000, 0, 0, 0, 0x40000000];
+    for (const v of m) w.u32(v);
+    w.zeros(24);
+    w.u32(nextTrackId);
+  });
+}
+
+/** track header */
+function writeTkhd(w, { trackId, duration, width = 0, height = 0, volume = 0 }) {
+  fullBox(w, 'tkhd', 0, 0x000007, () => {
+    w.u32(0); w.u32(0);
+    w.u32(trackId);
+    w.u32(0);
+    w.u32(duration);
+    w.zeros(8);
+    w.u16(0);           // layer
+    w.u16(0);           // alternate_group
+    w.u16(volume);      // 视频 0，音频 0x0100
+    w.u16(0);           // reserved
+    const m = [0x00010000, 0, 0, 0, 0x00010000, 0, 0, 0, 0x40000000];
+    for (const v of m) w.u32(v);
+    w.u32(width << 16);   // 16.16 fixed
+    w.u32(height << 16);
+  });
+}
+
+function writeTrak(w, { trackId, duration, width = 0, height = 0, volume = 0 }, timescale, handlerType, stblFn) {
+  box(w, 'trak', () => {
+    writeTkhd(w, { trackId, duration, width, height, volume });
+    writeMdia(w, { timescale, duration: stblFn.durationTicks }, handlerType, stblFn);
+  });
+}
+
+function writeMdia(w, { timescale, duration }, handlerType, fn) {
+  box(w, 'mdia', () => {
+    fullBox(w, 'mdhd', 0, 0, () => {
+      w.u32(0); w.u32(0);
+      w.u32(timescale);
+      w.u32(duration);
+      w.u16(0x55c4);    // language 'und'
+      w.u16(0);
+    });
+    fullBox(w, 'hdlr', 0, 0, () => {
+      w.u32(0);
+      w.fourcc(handlerType);
+      w.zeros(12);
+      const name = handlerType === 'vide' ? 'VideoHandler' : 'SoundHandler';
+      w.bytes(new TextEncoder().encode(name + '\0'));
+    });
+    box(w, 'minf', () => {
+      if (handlerType === 'vide') {
+        fullBox(w, 'vmhd', 0, 1, () => {
+          w.u16(0); w.u16(0); w.u16(0); w.u16(0);
+        });
+      } else {
+        fullBox(w, 'smhd', 0, 0, () => { w.u16(0); w.u16(0); });
+      }
+      box(w, 'dinf', () => {
+        fullBox(w, 'dref', 0, 0, () => {
+          w.u32(1);
+          fullBox(w, 'url ', 0, 1, () => {});
+        });
+      });
+      fn();
+    });
+  });
+}
+
+/** sample table: stsd/stts/stsc/stsz/stco */
+function writeStbl(w, { stsdFn, samples, chunkOffsetBase, isVideo }) {
+  box(w, 'stbl', () => {
+    fullBox(w, 'stsd', 0, 0, () => {
+      w.u32(1);
+      stsdFn();
+    });
+
+    // stts：把连续相同 delta 合并
+    const sttsEntries = [];
+    let prevDelta = -1, count = 0;
+    for (const s of samples) {
+      const d = s.duration;
+      if (d === prevDelta) count++;
+      else {
+        if (count > 0) sttsEntries.push({ count, delta: prevDelta });
+        prevDelta = d; count = 1;
+      }
+    }
+    if (count > 0) sttsEntries.push({ count, delta: prevDelta });
+    fullBox(w, 'stts', 0, 0, () => {
+      w.u32(sttsEntries.length);
+      for (const e of sttsEntries) { w.u32(e.count); w.u32(e.delta); }
+    });
+
+    // stsc：chunk 内 sample 数
+    fullBox(w, 'stsc', 0, 0, () => {
+      w.u32(1);
+      w.u32(1);           // first_chunk
+      w.u32(samples.length); // samples_per_chunk
+      w.u32(1);           // sample_description_index
+    });
+
+    // stsz
+    fullBox(w, 'stsz', 0, 0, () => {
+      w.u32(0);
+      w.u32(samples.length);
+      for (const s of samples) w.u32(s.size);
+    });
+
+    // stco：单 chunk
+    const chunkCount = 1;
+    fullBox(w, 'stco', 0, 0, () => {
+      w.u32(chunkCount);
+      w.u32(chunkOffsetBase);
+    });
+  });
+}
+
+
+// ===== src/remux.js =====
+/**
+ * 主流程：MPEG-PS → 标准 MP4（无损重封装）
+ *
+ * 内存策略（iPhone 关键）：
+ *   不把整片数据留在 JS 堆里。每处理完一帧就把它切成 Blob 分片，
+ *   交给浏览器托管（Chrome/Safari 会把大 Blob 落到磁盘），
+ *   峰值堆内存只有一个 4K 关键帧（约 3~6MB）。
+ */
+
+
+const VIDEO_TIMESCALE = 90000;
+const DEFAULT_DELTA = 3000; // 30fps
+
+async function extractParams(reader, videoAUs) {
+  const found = { vps: [], sps: [], pps: [] };
+  for (let i = 0; i < Math.min(videoAUs.length, 30); i++) {
+    const buf = await readAU(reader, videoAUs[i]);
+    for (const n of splitAnnexB(buf)) {
+      if (n.type === 32 && !found.vps.length) found.vps.push(buf.slice(n.dataStart, n.dataEnd));
+      if (n.type === 33 && !found.sps.length) found.sps.push(buf.slice(n.dataStart, n.dataEnd));
+      if (n.type === 34 && !found.pps.length) found.pps.push(buf.slice(n.dataStart, n.dataEnd));
+    }
+    if (found.vps.length && found.sps.length && found.pps.length) break;
+  }
+  return found;
+}
+
+/** AU → 单个 Blob（每 NAL 前加 4 字节长度，丢掉参数集 NAL）*/
+function auToParts(buf) {
+  const segs = [];
+  let size = 0;
+  for (const n of splitAnnexB(buf)) {
+    if (n.type >= 32 && n.type !== 39 && n.type !== 40) continue; // 丢 VPS/SPS/PPS/APS
+    const len = n.dataEnd - n.dataStart;
+    if (len <= 0) continue;
+    const pre = new Uint8Array(4);
+    pre[0] = (len >>> 24) & 0xff;
+    pre[1] = (len >>> 16) & 0xff;
+    pre[2] = (len >>> 8) & 0xff;
+    pre[3] = len & 0xff;
+    segs.push(pre, buf.subarray(n.dataStart, n.dataEnd));
+    size += 4 + len;
+  }
+  if (!size) return { blob: null, size: 0 };
+  // 每帧只生成一个 Blob，减少 iOS 上的对象数量压力
+  return { blob: new Blob(segs), size };
+}
+
+async function collectAudio(reader, audioPES) {
+  const parts = [];
+  const samples = [];
+  let cfg = null;
+  for (const pes of audioPES) {
+    const buf = await reader.view(pes.off, pes.len);
+    let o = 0;
+    while (o + 7 <= buf.length) {
+      const hdr = parseAdts(buf, o);
+      if (!hdr || hdr.frameLen < hdr.headerLen || hdr.frameLen > buf.length - o) break;
+      const payload = buf.slice(o + hdr.headerLen, o + hdr.frameLen); // copy：窗口会被换掉
+      if (!cfg) cfg = hdr;
+      parts.push(new Blob([payload]));  // payload 已是独立副本
+      samples.push({ size: payload.length, duration: 1024 });
+      o += hdr.frameLen;
+    }
+  }
+  return { parts, samples, cfg };
+}
+
+/** 把参数集 NAL 前置到一帧数据前面（用于合并时给后续段补 SPS）*/
+function rebuildFirstFrame(raw, params) {
+  const segs = [];
+  let size = 0;
+  const pushNal = (data) => {
+    const pre = new Uint8Array(4);
+    pre[0] = (data.length >>> 24) & 0xff;
+    pre[1] = (data.length >>> 16) & 0xff;
+    pre[2] = (data.length >>> 8) & 0xff;
+    pre[3] = data.length & 0xff;
+    segs.push(pre, data);
+    size += 4 + data.length;
+  };
+  // 先 VPS/SPS/PPS
+  for (const group of [params.vps, params.sps, params.pps]) {
+    for (const nal of group) pushNal(nal);
+  }
+  // 再原有的 VCL / SEI
+  for (const n of splitAnnexB(raw)) {
+    if (n.type >= 32 && n.type !== 39 && n.type !== 40) continue;
+    const len = n.dataEnd - n.dataStart;
+    if (len > 0) pushNal(raw.subarray(n.dataStart, n.dataEnd));
+  }
+  return { blob: new Blob(segs), size };
+}
+
+/** 分析单个文件：得到样本尺寸、分片、参数集，不保留像素数据 */
+async function analyzeFile(blob, { onProgress, label } = {}) {
+  const report = (stage, pct) => onProgress && onProgress({ stage, pct, label });
+
+  const reader = new ChunkedReader(blob);
+  report('扫描容器', 0);
+  const ps = await scanPES(reader, { onProgress: (p) => report('扫描容器', p * 0.45) });
+  if (!ps.videoAUs.length) throw new Error('未找到视频帧，可能不是记录仪格式');
+
+  const headBuf = await reader.view(0, Math.min(1024, blob.size));
+  const priv = parsePrivateHeader(headBuf);
+
+  report('解析参数集', 0.45);
+  const params = await extractParams(reader, ps.videoAUs);
+  if (!params.sps.length) throw new Error('未找到 HEVC 参数集');
+
+  report('提取音频', 0.5);
+  const audio = await collectAudio(reader, ps.audioPES);
+
+  report('重建索引', 0.55);
+  const parts = [];
+  const samples = [];
+  let total = 0;
+  let prevPts = null;
+  let firstFrameRaw = null;
+
+  for (let i = 0; i < ps.videoAUs.length; i++) {
+    const au = ps.videoAUs[i];
+    const raw = await readAU(reader, au);
+    const { blob: frameBlob, size } = auToParts(raw);
+    if (!size) continue;
+    if (!firstFrameRaw) firstFrameRaw = raw;
+
+    let dur = DEFAULT_DELTA;
+    if (prevPts !== null && au.pts !== null) {
+      const d = au.pts - prevPts;
+      if (d > 100 && d < 90000) dur = d;
+    }
+    prevPts = au.pts !== null ? au.pts : prevPts;
+
+    samples.push({ size, duration: dur });
+    parts.push(frameBlob);
+    total += size;
+
+    if (i % 40 === 0) report('重建索引', 0.55 + (i / ps.videoAUs.length) * 0.4);
+  }
+
+  report('完成', 1);
+  return {
+    params, priv, audio, parts, samples,
+    firstRaw: firstFrameRaw,
+    videoBytes: total,
+    privateHeaderLen: ps.privateHeaderLen,
+    srcSize: blob.size,
+  };
+}
+
+/** 由若干已分析文件组装成一个 MP4 */
+async function buildMp4(files, { onProgress, merge = false } = {}) {
+  const report = (stage, pct) => onProgress && onProgress({ stage, pct });
+  // files: [{parts, samples, audio, params, priv}]
+  const primary = files[0];
+  const sps = parseHevcSPS(primary.params.sps[0]);
+
+  // 合并轨：把所有文件的样本按顺序接起来
+  // 注意：记录仪分段之间通常无缝衔接，不做人为插空隙
+  // （插空隙会让 stts 出现巨大 delta，播放器算出 0.7fps 之类荒谬帧率）
+  const videos = [];
+  const vParts = [];
+  const audios = [];
+  const aParts = [];
+  let videoBytes = 0;
+
+  for (let fi = 0; fi < files.length; fi++) {
+    const f = files[fi];
+    if (fi === 0 || !f.firstRaw) {
+      videos.push(...f.samples);
+      vParts.push(...f.parts);
+      for (const s of f.samples) videoBytes += s.size;
+    } else {
+      // 段与段之间重插参数集，否则下一段开头缺 SPS 会花屏。
+      // 注意：hvc1 允许参数集出现在码流中，这里只补 SPS/PPS（不带 VPS，避免重复）
+      const rebuilt = rebuildFirstFrame(f.firstRaw, f.params);
+      videos.push({ ...f.samples[0], size: rebuilt.size }, ...f.samples.slice(1));
+      vParts.push(rebuilt.blob, ...f.parts.slice(1));
+      videoBytes += rebuilt.size;
+      for (const s of f.samples.slice(1)) videoBytes += s.size;
+    }
+    audios.push(...f.audio.samples);
+    aParts.push(...f.audio.parts);
+  }
+
+  const videoDurationTicks = videos.reduce((s, x) => s + x.duration, 0);
+  const videoDurationMs = Math.round(videoDurationTicks / VIDEO_TIMESCALE * 1000);
+  const audioDurationTicks = audios.reduce((s, x) => s + x.duration, 0);
+  const sampleRate = primary.audio.cfg ? primary.audio.cfg.sampleRate : 16000;
+  const channels = primary.audio.cfg ? primary.audio.cfg.channels : 1;
+
+  const hvcC = buildHvcC(sps, [
+    { nalType: 32, nals: primary.params.vps },
+    { nalType: 33, nals: primary.params.sps },
+    { nalType: 34, nals: primary.params.pps },
+  ]);
+  const asc = primary.audio.cfg
+    ? buildAudioSpecificConfig(primary.audio.cfg.objectType, primary.audio.cfg.sampleRateIndex, primary.audio.cfg.channels)
+    : new Uint8Array([0x12, 0x10]);
+
+  const buildMoov = (chunkOffset) => {
+    const w = new ByteWriter(1 << 19);
+    box(w, 'moov', () => {
+      writeMvhd(w, { timescale: 1000, duration: videoDurationMs, nextTrackId: 3 });
+
+      box(w, 'trak', () => {
+        writeTkhd(w, { trackId: 1, duration: videoDurationMs, width: sps.displayWidth, height: sps.displayHeight });
+        writeMdia(w, { timescale: VIDEO_TIMESCALE, duration: videoDurationTicks }, 'vide', () => {
+          writeStbl(w, {
+            samples: videos,
+            chunkOffsetBase: chunkOffset,
+            stsdFn: () => {
+              box(w, 'hvc1', () => {
+                w.zeros(6); w.u16(1);
+                w.zeros(16);
+                w.u16(sps.displayWidth); w.u16(sps.displayHeight);
+                w.u32(0x00480000); w.u32(0x00480000);
+                w.u32(0);
+                w.u16(1);
+                w.zeros(32);
+                w.u16(0x0018);
+                w.u16(0xffff);
+                box(w, 'hvcC', () => w.bytes(hvcC));
+              });
+            },
+          });
+        });
+      });
+
+      if (audios.length) {
+        box(w, 'trak', () => {
+          writeTkhd(w, { trackId: 2, duration: videoDurationMs, volume: 0x0100 });
+          writeMdia(w, { timescale: sampleRate, duration: audioDurationTicks }, 'soun', () => {
+            writeStbl(w, {
+              samples: audios,
+              chunkOffsetBase: chunkOffset + videoBytes,
+              stsdFn: () => {
+                box(w, 'mp4a', () => {
+                  w.zeros(6); w.u16(1);
+                  w.zeros(8);
+                  w.u16(channels);
+                  w.u16(16);
+                  w.u16(0); w.u16(0);
+                  w.u32(sampleRate << 16);
+                  box(w, 'esds', () => {
+                    w.u32(0);
+                    w.u8(0x03); w.u8(0x19); w.u16(1); w.u8(0);
+                    w.u8(0x04); w.u8(0x11); w.u8(0x40); w.u8(0x15);
+                    w.u24(0); w.u32(0); w.u32(0);
+                    w.u8(0x05); w.u8(2); w.bytes(asc);
+                    w.u8(0x06); w.u8(1); w.u8(0x02);
+                  });
+                });
+              },
+            });
+          });
+        });
+      }
+    });
+    return w.toU8();
+  };
+
+  report('封装', 0.6);
+  const ftypW = new ByteWriter(64);
+  writeFtyp(ftypW);
+  const ftyp = ftypW.toU8();
+
+  const audioBytes = aParts.reduce((s, b) => s + b.size, 0);
+  const mdatSize = 8 + videoBytes + audioBytes;
+
+  let moov = buildMoov(0);
+  const mdatDataStart = ftyp.length + moov.length + 8;
+  moov = buildMoov(mdatDataStart);
+
+  const mdatHdr = new Uint8Array(8);
+  mdatHdr[0] = (mdatSize >>> 24) & 0xff;
+  mdatHdr[1] = (mdatSize >>> 16) & 0xff;
+  mdatHdr[2] = (mdatSize >>> 8) & 0xff;
+  mdatHdr[3] = mdatSize & 0xff;
+  mdatHdr[4] = 0x6d; mdatHdr[5] = 0x64; mdatHdr[6] = 0x61; mdatHdr[7] = 0x74;
+
+  report('写出文件', 0.9);
+  const out = new Blob([ftyp, moov, mdatHdr, ...vParts, ...aParts], { type: 'video/mp4' });
+  report('完成', 1);
+
+  return {
+    blob: out,
+    info: {
+      width: sps.displayWidth,
+      height: sps.displayHeight,
+      videoFrames: videos.length,
+      audioFrames: audios.length,
+      durationSec: videoDurationTicks / VIDEO_TIMESCALE,
+      sampleRate, channels, codec: 'HEVC',
+      size: out.size,
+      fileCount: files.length,
+      bitrate: Math.round(videoBytes * 8 / (videoDurationTicks / VIDEO_TIMESCALE) / 1000),
+    },
+  };
+}
+
+/** 单文件便捷入口 */
+async function remuxToMp4(blob, opts = {}) {
+  const f = await analyzeFile(blob, opts);
+  return buildMp4([f], opts);
+}
+
+
+// ===== app.js =====
+
+const $ = (id) => document.getElementById(id);
+const dropEl = $('drop');
+const fileEl = $('file');
+const panel = $('panel');
+const listEl = $('list');
+const runBtn = $('run');
+const resetBtn = $('reset');
+const dlAllBtn = $('dlall');
+const progEl = $('prog');
+const barEl = $('bar');
+const ptxtEl = $('ptxt');
+
+/** @type {{file: File, id: string, status: string, result?: any, info?: any, error?: string, analyzed?: any}[]} */
+let items = [];
+let mode = 'single';
+let order = 'time';
+let running = false;
+
+const fmtSize = (n) => {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 ** 2) return (n / 1024).toFixed(0) + ' KB';
+  if (n < 1024 ** 3) return (n / 1024 ** 2).toFixed(1) + ' MB';
+  return (n / 1024 ** 3).toFixed(2) + ' GB';
+};
+const fmtDur = (s) => {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m > 0 ? `${m}分${sec}秒` : `${sec}秒`;
+};
+
+// ---------- 选择文件 ----------
+dropEl.addEventListener('click', () => fileEl.click());
+fileEl.addEventListener('change', () => {
+  addFiles([...fileEl.files]);
+  fileEl.value = '';
+});
+['dragenter', 'dragover'].forEach((ev) =>
+  dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.add('over'); })
+);
+['dragleave', 'drop'].forEach((ev) =>
+  dropEl.addEventListener(ev, (e) => { e.preventDefault(); dropEl.classList.remove('over'); })
+);
+dropEl.addEventListener('drop', (e) => {
+  if (e.dataTransfer?.files?.length) addFiles([...e.dataTransfer.files]);
+});
+
+function addFiles(files) {
+  const valid = files.filter((f) => f.size > 1024);
+  if (!valid.length) return;
+  for (const f of valid) {
+    items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+  }
+  render();
+  panel.classList.remove('hidden');
+  dropEl.style.display = 'none';
+}
+
+function render() {
+  listEl.innerHTML = '';
+  for (const it of items) {
+    const el = document.createElement('div');
+    el.className = 'item';
+    const meta = [];
+    meta.push(fmtSize(it.file.size));
+    if (it.info) {
+      meta.push(`${it.info.width}×${it.info.height}`);
+      meta.push(fmtDur(it.info.durationSec));
+      meta.push(`${it.info.bitrate} kbps`);
+    }
+    let stateText = '';
+    let stateCls = '';
+    if (it.status === 'pending') { stateText = '待处理'; }
+    else if (it.status === 'working') { stateText = '处理中'; stateCls = 'work'; }
+    else if (it.status === 'done') { stateText = '已修复'; stateCls = 'ok'; }
+    else if (it.status === 'error') { stateText = it.error || '失败'; stateCls = 'err'; }
+
+    el.innerHTML = `
+      <div class="item-main">
+        <div class="item-name"></div>
+        <div class="item-meta">${meta.join(' · ')}</div>
+      </div>
+      <span class="item-state ${stateCls}"></span>
+      ${!running && it.status !== 'done' ? '<button class="item-del" title="移除">×</button>' : ''}
+    `;
+    el.querySelector('.item-name').textContent = it.file.name;
+    el.querySelector('.item-state').textContent = stateText;
+    const del = el.querySelector('.item-del');
+    if (del) del.addEventListener('click', () => {
+      items = items.filter((x) => x.id !== it.id);
+      if (!items.length) { panel.classList.add('hidden'); dropEl.style.display = ''; }
+      render();
+    });
+    listEl.appendChild(el);
+  }
+  if (items.some((i) => i.status === 'done')) dlAllBtn.classList.remove('hidden');
+}
+
+// ---------- 选项 ----------
+$('modeSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('.seg-btn');
+  if (!btn) return;
+  mode = btn.dataset.mode;
+  [...$('modeSeg').children].forEach((b) => b.classList.toggle('active', b === btn));
+  $('mergeOpt').hidden = mode !== 'merge';
+});
+$('orderSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('.seg-btn');
+  if (!btn) return;
+  order = btn.dataset.order;
+  [...$('orderSeg').children].forEach((b) => b.classList.toggle('active', b === btn));
+});
+
+// ---------- 主流程 ----------
+resetBtn.addEventListener('click', () => {
+  if (running) return;
+  items = [];
+  listEl.innerHTML = '';
+  panel.classList.add('hidden');
+  dropEl.style.display = '';
+  progEl.classList.add('hidden');
+  dlAllBtn.classList.add('hidden');
+});
+
+runBtn.addEventListener('click', async () => {
+  if (running) return;
+  const todo = items.filter((i) => i.status === 'pending' || i.status === 'error');
+  if (!todo.length) return;
+
+  running = true;
+  runBtn.disabled = true;
+  resetBtn.disabled = true;
+  dlAllBtn.classList.add('hidden');
+  progEl.classList.remove('hidden');
+  setProgress(0, '准备中…');
+
+  try {
+    if (mode === 'merge' && todo.length + items.filter((i) => i.status === 'done').length > 1) {
+      await runMerge();
+    } else {
+      await runSingle(todo);
+    }
+  } catch (err) {
+    console.error(err);
+    setProgress(1, '出错：' + (err.message || err));
+  } finally {
+    running = false;
+    runBtn.disabled = false;
+    resetBtn.disabled = false;
+    render();
+    if (items.some((i) => i.status === 'done')) dlAllBtn.classList.remove('hidden');
+  }
+});
+
+async function runSingle(todo) {
+  const n = todo.length;
+  for (let k = 0; k < n; k++) {
+    const it = todo[k];
+    it.status = 'working';
+    render();
+    try {
+      const base = (k / n) * 100;
+      const span = (1 / n) * 100;
+      const analyzed = await analyzeFile(it.file, {
+        label: it.file.name,
+        onProgress: ({ stage, pct }) => setProgress((base + pct * span) / 100, `${it.file.name} — ${stage}`),
+      });
+      const { blob, info } = await buildMp4([analyzed]);
+      const name = outputName(it.file.name, analyzed.priv, analyzed);
+      it.result = { blob, name };
+      it.info = info;
+      it.status = 'done';
+      it.analyzed = analyzed;
+      render();
+    } catch (err) {
+      it.status = 'error';
+      it.error = err.message || '失败';
+      render();
+    }
+  }
+  setProgress(1, '完成');
+}
+
+async function runMerge() {
+  const all = items.slice();
+  const ordered = [...all].sort((a, b) => {
+    if (order === 'name') return a.file.name.localeCompare(b.file.name);
+    const ta = a.analyzed?.priv?.startTs ?? 0;
+    const tb = b.analyzed?.priv?.startTs ?? 0;
+    return ta - tb;
+  });
+
+  const analyzedList = [];
+  for (let k = 0; k < ordered.length; k++) {
+    const it = ordered[k];
+    if (it.analyzed) { analyzedList.push(it.analyzed); continue; }
+    it.status = 'working';
+    render();
+    try {
+      it.analyzed = await analyzeFile(it.file, {
+        label: it.file.name,
+        onProgress: ({ stage, pct }) => {
+          const base = (k / ordered.length) * 70;
+          setProgress((base + pct * 70 / ordered.length) / 100, `读取 ${it.file.name} — ${stage}`);
+        },
+      });
+      analyzedList.push(it.analyzed);
+    } catch (err) {
+      it.status = 'error';
+      it.error = err.message || '失败';
+      render();
+    }
+  }
+  if (!analyzedList.length) throw new Error('没有可用的视频');
+
+  setProgress(0.75, '合并中…');
+  const { blob, info } = await buildMp4(analyzedList, { merge: true });
+  const name = `merged_${ordered.length}段.mp4`;
+  items.forEach((it) => {
+    if (it.status !== 'error') {
+      it.status = 'done';
+      it.info = info;
+      it.result = { blob, name, shared: true };
+    }
+  });
+  setProgress(1, '完成');
+}
+
+function setProgress(p, text) {
+  barEl.style.width = `${Math.round(p * 100)}%`;
+  ptxtEl.textContent = text || '';
+}
+
+// ---------- 命名 ----------
+function outputName(orig, priv, analyzed) {
+  const ts = priv?.startTs;
+  if (ts) {
+    const d = new Date(ts * 1000);
+    const p = (v) => String(v).padStart(2, '0');
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.mp4`;
+  }
+  return orig.replace(/\.[^.]+$/, '') + '_fixed.mp4';
+}
+
+// ---------- 下载 ----------
+function download(blob, name) {
+  window.__lastBlob = blob;   // 便于自动化验证取回产物
+  window.__lastName = name;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// 点击已完成条目即可下载
+listEl.addEventListener('click', (e) => {
+  const el = e.target.closest('.item');
+  if (!el) return;
+  const idx = [...listEl.children].indexOf(el);
+  const it = items[idx];
+  if (it?.status === 'done' && it.result && !e.target.closest('.item-del')) {
+    download(it.result.blob, it.result.name);
+  }
+});
+
+dlAllBtn.addEventListener('click', () => {
+  const done = items.filter((i) => i.status === 'done' && i.result);
+  const shared = done.filter((i) => i.result.shared);
+  if (shared.length) {
+    download(shared[0].result.blob, shared[0].result.name);
+    return;
+  }
+  done.forEach((it, k) => setTimeout(() => download(it.result.blob, it.result.name), k * 400));
+});
+
+</script>
+</body>
+</html>
