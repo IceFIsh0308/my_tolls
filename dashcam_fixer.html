@@ -261,6 +261,39 @@ body {
 }
 .ptxt { margin: 9px 0 0; font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 
+/* ===== 重复文件提示 ===== */
+.dupbox {
+  margin-top: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 11px 14px;
+}
+.dupbox-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dupbox-title { font-size: 12.5px; color: #92400e; font-weight: 600; }
+.dupbox-title b { color: #b45309; }
+.dupbox-toggle {
+  border: 0;
+  background: transparent;
+  color: #b45309;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 2px 4px;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+.duplist { list-style: none; margin: 8px 0 0; padding: 0; }
+.duplist li {
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.65;
+  padding: 5px 0;
+  border-top: 1px dashed #fde68a;
+}
+.duplist li:first-child { border-top: 0; padding-top: 0; }
+.duplist li b { color: #78350f; }
+
 /* ===== 说明 ===== */
 .notes h2 { font-size: 13.5px; font-weight: 700; margin: 20px 0 8px; color: var(--text); }
 .notes h2:first-child { margin-top: 0; }
@@ -377,6 +410,14 @@ body {
       <div class="sec-body">
         <div class="list" id="list"></div>
         <button id="addmore" class="addmore">+ 继续添加视频</button>
+
+        <div class="dupbox hidden" id="dupbox">
+          <div class="dupbox-head">
+            <span class="dupbox-title">🧹 已自动剔除 <b id="dupcount">0</b> 个重复文件</span>
+            <button class="dupbox-toggle" id="duptoggle">收起</button>
+          </div>
+          <ul class="duplist" id="duplist"></ul>
+        </div>
         <div class="actions">
           <button id="run" class="btn primary">开始修复</button>
           <button id="dlall" class="btn hidden">全部下载</button>
@@ -413,6 +454,115 @@ body {
 </div>
 
 <script type="module">
+// ===== src/dedup.js =====
+/**
+ * 重复文件检测 —— 两层判断
+ *
+ * 第一层（零 IO）：文件名 + 大小 + 最后修改时间全同 → 就是同一个文件被选了两次。
+ *   注意不能用「大小相同」单独判重：记录仪每段视频都被填充到固定 256MiB，
+ *   光看大小会把所有不同视频都当成重复。
+ *
+ * 第二层（内容指纹）：大小相同才读，取文件头 256KB + 尾部 4KB 算 SHA-256。
+ *   记录仪这 256KB 私有头里有索引、缩略图、起止时间戳，两个不同视频碰巧全同的概率可忽略；
+ *   Apple 只支持 1.1GB 以内的 Blob 一次读取，所以不读全文件。
+ */
+
+const HEAD_BYTES = 262144; // 海康私有头大小，正好覆盖索引 + 缩略图 + 起止时间戳
+const TAIL_BYTES = 4096;
+
+/** 同一个文件被选了两次（元数据全同） */
+function isSameRecord(a, b) {
+  return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+}
+
+async function hashBytes(buf) {
+  if (globalThis.crypto?.subtle) {
+    try {
+      const h = await crypto.subtle.digest('SHA-256', buf);
+      return [...new Uint8Array(h)].map((x) => x.toString(16).padStart(2, '0')).join('');
+    } catch { /* 退化到下面的方案 */ }
+  }
+  let h1 = 0x811c9dc5;
+  for (let i = 0; i < buf.length; i++) h1 = (h1 ^ buf[i]) * 16777619 >>> 0;
+  return `f${h1.toString(16)}${buf.length.toString(16)}`;
+}
+
+/** 内容指纹：大小 + 头尾哈希 */
+async function fingerprint(file) {
+  const parts = [await file.slice(0, Math.min(HEAD_BYTES, file.size)).arrayBuffer()];
+  if (file.size > HEAD_BYTES + TAIL_BYTES) {
+    parts.push(await file.slice(file.size - TAIL_BYTES, file.size).arrayBuffer());
+  }
+  const total = parts.reduce((s, p) => s + p.byteLength, 0);
+  const buf = new Uint8Array(total);
+  let o = 0;
+  for (const p of parts) { buf.set(new Uint8Array(p), o); o += p.byteLength; }
+  return `${file.size}:${await hashBytes(buf)}`;
+}
+
+/**
+ * 从候选中剔除重复项。
+ * @param {File[]} incoming 新选进来的文件
+ * @param {File[]} existing 已经在列表里的文件
+ * @returns {Promise<{kept: File[], dropped: {file: File, reason: string, keptName: string}[]}>}
+ */
+async function dedupe(incoming, existing = []) {
+  const kept = [];
+  const dropped = [];
+
+  // ---------- 第一层：元数据 ----------
+  const cache = new Map(); // 给每个文件缓存指纹
+  for (const f of incoming) {
+    const hit = [...existing, ...kept].find((x) => isSameRecord(x, f));
+    if (hit) {
+      dropped.push({
+        file: f,
+        reason: `与「${hit.name}」是同一个文件（文件名、大小、修改时间完全一致，重复选择了一次）`,
+        keptName: hit.name,
+      });
+      continue;
+    }
+    kept.push(f);
+  }
+
+  if (kept.length < 2 && existing.length === 0) return { kept, dropped };
+
+  // ---------- 第二层：内容指纹（只比大小相同的）----------
+  const pool = [...existing, ...kept];
+  const bySize = new Map();
+  for (const f of pool) {
+    const g = bySize.get(f.size);
+    if (g) g.push(f); else bySize.set(f.size, [f]);
+  }
+
+  for (const [, group] of bySize) {
+    if (group.length < 2) continue;
+    // 只有新选进来的才可能被剔除，existing 里用户已确认过的保持不动
+    for (let i = 0; i < group.length; i++) {
+      const a = group[i];
+      if (!cache.has(a)) cache.set(a, await fingerprint(a));
+      const fpA = cache.get(a);
+      for (let j = i + 1; j < group.length; j++) {
+        const b = group[j];
+        if (!kept.includes(b)) continue;      // 已存在的不动
+        if (!cache.has(b)) cache.set(b, await fingerprint(b));
+        if (cache.get(b) === fpA) {
+          dropped.push({
+            file: b,
+            reason: `与「${a.name}」内容完全相同（大小一致，文件头与尾部数据逐字节一致，应是同一段视频的另一份副本）`,
+            keptName: a.name,
+          });
+          kept.splice(kept.indexOf(b), 1);
+          break;
+        }
+      }
+    }
+  }
+
+  return { kept, dropped };
+}
+
+
 // ===== src/chunkreader.js =====
 /**
  * 分块访问器：把 Blob 当成可随机读的文件，但把「读窗口」做大。
@@ -1430,6 +1580,10 @@ let items = [];
 let mode = 'single';
 let order = 'time';
 let running = false;
+/** 已剔除的重复文件记录 {name, reason, keptName} */
+let dupNotes = [];
+/** 内容判重的串行队列，避免多次选择时并发读同一个文件 */
+let dedupeQueue = Promise.resolve();
 
 const fmtSize = (n) => {
   if (n < 1024) return n + ' B';
@@ -1446,6 +1600,11 @@ const fmtDur = (s) => {
 // ---------- 选择文件 ----------
 dropEl.addEventListener('click', () => fileEl.click());
 $('addmore').addEventListener('click', () => fileEl.click());
+$('duptoggle').addEventListener('click', () => {
+  const list = $('duplist');
+  const hidden = list.classList.toggle('hidden');
+  $('duptoggle').textContent = hidden ? '展开' : '收起';
+});
 fileEl.addEventListener('change', () => {
   addFiles([...fileEl.files]);
   fileEl.value = '';
@@ -1460,15 +1619,60 @@ dropEl.addEventListener('drop', (e) => {
   if (e.dataTransfer?.files?.length) addFiles([...e.dataTransfer.files]);
 });
 
+/** 新选的文件进队列前先去掉重复项 */
 function addFiles(files) {
   const valid = files.filter((f) => f.size > 1024);
   if (!valid.length) return;
-  for (const f of valid) {
-    items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+
+  // 排队串行执行，避免多次选择时并发读同一批文件
+  dedupeQueue = dedupeQueue.then(async () => {
+    const existing = items.filter((it) => !it.removed).map((it) => it.file);
+    const { kept, dropped } = await dedupe(valid, existing);
+
+    for (const d of dropped) noteDuplicate(d.file.name, d.reason, d.keptName);
+
+    if (!kept.length && !dropped.length) return;
+
+    for (const f of kept) {
+      items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+    }
+    render();
+    panel.classList.remove('hidden');
+    dropEl.style.display = 'none';
+  });
+
+  dedupeQueue.catch((err) => {
+    console.error('去重出错，文件照常加入', err);
+    for (const f of valid) {
+      items.push({ file: f, id: Math.random().toString(36).slice(2), status: 'pending' });
+    }
+    render();
+    panel.classList.remove('hidden');
+    dropEl.style.display = 'none';
+  });
+}
+
+/** 记录一条"已剔除重复"的提示 */
+function noteDuplicate(name, reason, keptName) {
+  dupNotes.push({ name, reason, keptName });
+  renderDupBox();
+}
+
+function renderDupBox() {
+  const box = $('dupbox');
+  if (!dupNotes.length) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  $('dupcount').textContent = dupNotes.length;
+  const list = $('duplist');
+  list.innerHTML = '';
+  for (const d of dupNotes) {
+    const li = document.createElement('li');
+    const b = document.createElement('b');
+    b.textContent = d.name;
+    li.appendChild(b);
+    li.appendChild(document.createTextNode(' — ' + d.reason));
+    list.appendChild(li);
   }
-  render();
-  panel.classList.remove('hidden');
-  dropEl.style.display = 'none';
 }
 
 /** 按当前条目数决定哪些选项该出现 */
@@ -1541,15 +1745,21 @@ $('orderSeg').addEventListener('click', (e) => {
 resetBtn.addEventListener('click', () => {
   if (running) return;
   items = [];
+  dupNotes = [];
+  dedupeQueue = Promise.resolve();
   listEl.innerHTML = '';
   panel.classList.add('hidden');
   dropEl.style.display = '';
   progEl.classList.add('hidden');
   dlAllBtn.classList.add('hidden');
+  $('dupbox').classList.add('hidden');
+  $('duplist').innerHTML = '';
 });
 
 runBtn.addEventListener('click', async () => {
   if (running) return;
+  // 等内容判重跑完，避免重复文件混进处理队列
+  await dedupeQueue;
   const todo = items.filter((i) => i.status === 'pending' || i.status === 'error');
   if (!todo.length) return;
 
