@@ -166,6 +166,24 @@ html, body {
 }
 .item-del:hover { color: var(--err); }
 
+/* 继续添加 */
+.addmore {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px;
+  background: transparent;
+  border: 1.5px dashed var(--line);
+  border-radius: 11px;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color .18s, color .18s;
+}
+.addmore:hover { border-color: var(--accent); color: var(--accent); }
+.addmore:active { background: var(--card-2); }
+
 /* ---------- 操作 ---------- */
 .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 .btn {
@@ -254,7 +272,6 @@ html, body {
   </header>
 
   <section id="drop" class="drop">
-    <input id="file" type="file" multiple accept="video/*,.mp4,.MP4,.264,.ts,.ps" hidden>
     <div class="drop-inner">
       <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
         <path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -264,9 +281,10 @@ html, body {
       <p class="hint">支持一次选多个文件。文件不会离开你的设备，全程在浏览器本地处理。</p>
     </div>
   </section>
+  <input id="file" type="file" multiple accept="video/*,.mp4,.MP4,.264,.ts,.ps" hidden>
 
   <section id="panel" class="panel hidden">
-    <div class="opts">
+    <div class="opts hidden" id="opts">
       <label class="opt">
         <span class="opt-name">输出方式</span>
         <div class="seg" id="modeSeg">
@@ -274,7 +292,7 @@ html, body {
           <button class="seg-btn" data-mode="merge">合并成一条</button>
         </div>
       </label>
-      <label class="opt" id="mergeOpt" hidden>
+      <label class="opt hidden" id="mergeOpt">
         <span class="opt-name">合并顺序</span>
         <div class="seg" id="orderSeg">
           <button class="seg-btn active" data-order="time">按录制时间</button>
@@ -284,6 +302,8 @@ html, body {
     </div>
 
     <div class="list" id="list"></div>
+
+    <button id="addmore" class="addmore">+ 继续添加视频</button>
 
     <div class="actions">
       <button id="run" class="btn primary">开始修复</button>
@@ -1342,6 +1362,7 @@ const fmtDur = (s) => {
 
 // ---------- 选择文件 ----------
 dropEl.addEventListener('click', () => fileEl.click());
+$('addmore').addEventListener('click', () => fileEl.click());
 fileEl.addEventListener('change', () => {
   addFiles([...fileEl.files]);
   fileEl.value = '';
@@ -1365,6 +1386,16 @@ function addFiles(files) {
   render();
   panel.classList.remove('hidden');
   dropEl.style.display = 'none';
+}
+
+/** 按当前条目数决定哪些选项该出现 */
+function syncOptions() {
+  const n = items.length;
+  const opts = $('opts');
+  // 只有 2 条及以上才需要选输出方式；1 条就是直接输出
+  opts.classList.toggle('hidden', n < 2);
+  // 合并顺序只在「选了合并且够 2 条」时出现（分开输出永远不展示）
+  $('mergeOpt').classList.toggle('hidden', !(n >= 2 && mode === 'merge'));
 }
 
 function render() {
@@ -1405,6 +1436,7 @@ function render() {
     listEl.appendChild(el);
   }
   if (items.some((i) => i.status === 'done')) dlAllBtn.classList.remove('hidden');
+  syncOptions();
 }
 
 // ---------- 选项 ----------
@@ -1413,7 +1445,7 @@ $('modeSeg').addEventListener('click', (e) => {
   if (!btn) return;
   mode = btn.dataset.mode;
   [...$('modeSeg').children].forEach((b) => b.classList.toggle('active', b === btn));
-  $('mergeOpt').hidden = mode !== 'merge';
+  syncOptions();
 });
 $('orderSeg').addEventListener('click', (e) => {
   const btn = e.target.closest('.seg-btn');
