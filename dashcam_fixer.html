@@ -4,273 +4,338 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#ff7d00">
 <title>记录仪视频修复</title>
 
 <style>
 :root {
-  --bg: #0f1115;
-  --card: #171a21;
-  --card-2: #1e222b;
-  --line: #272c37;
-  --text: #e8eaef;
-  --dim: #9aa2b1;
-  --dim-2: #6b7280;
-  --accent: #4a9eff;
-  --accent-dim: #2c6cb8;
-  --ok: #3ecf8e;
-  --warn: #f5a524;
-  --err: #f2555a;
+  --primary: #ff7d00;
+  --primary-dark: #e06d00;
+  --primary-soft: #fff4e8;
+  --bg: #f7f8fa;
+  --card: #fff;
+  --border: #e5e7eb;
+  --text: #18191c;
+  --text-2: #6b7280;
+  --text-3: #9ca3af;
+  --ok: #059669;
+  --ok-bg: #d1fae5;
+  --err: #dc2626;
+  --err-bg: #fee2e2;
   --radius: 14px;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-html, body {
-  margin: 0;
-  padding: 0;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
-               "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
   font-size: 15px;
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 20px 64px;
+/* ===== 固定头部（与视频总结工具同款） ===== */
+.sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+}
+.hero {
+  background: linear-gradient(135deg, #ff7d00, #ffa04d);
+  color: #fff;
+  text-align: center;
+  padding: 12px 20px 10px;
+}
+.hero .logo { font-size: 20px; vertical-align: middle; margin-right: 8px; display: inline-block; }
+.hero h1 { font-size: 18px; font-weight: 800; display: inline; vertical-align: middle; letter-spacing: -.2px; }
+.hero .sub { font-size: 12.5px; opacity: .93; margin-top: 2px; }
+.hero .tags { margin-top: 5px; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+.hero .tag {
+  font-size: 10px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .18);
+  border: 1px solid rgba(255, 255, 255, .3);
 }
 
-/* ---------- 头部 ---------- */
-.head { padding: 44px 0 26px; }
-.head h1 {
-  margin: 0 0 8px;
-  font-size: 27px;
-  font-weight: 620;
-  letter-spacing: -0.4px;
+.toolbar {
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 20px;
 }
-.sub { margin: 0; color: var(--dim); font-size: 14px; }
+.toolbar .flow-title { font-size: 13px; font-weight: 800; white-space: nowrap; }
+.toolbar .flow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.toolbar .flow .fs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  background: #f3f4f6;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  color: var(--text-2);
+}
+.toolbar .flow .fs b {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.toolbar .flow .ar { color: #d1d5db; font-size: 14px; }
 
-/* ---------- 拖放区 ---------- */
+/* ===== 容器 ===== */
+.wrap { max-width: 720px; margin: 0 auto; padding: 18px 16px 60px; }
+
+/* ===== 卡片区块 ===== */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 13px 18px 11px;
+  border-bottom: 1px solid var(--border);
+}
+.sec-head h2 { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.sec-body { padding: 16px 18px; }
+
+/* ===== 拖放区 ===== */
 .drop {
-  border: 1.5px dashed var(--line);
+  border: 2px dashed #ffd3a8;
+  background: linear-gradient(180deg, #fffaf5, #fff);
   border-radius: var(--radius);
-  background: var(--card);
-  transition: border-color .18s, background .18s;
   cursor: pointer;
+  transition: border-color .18s, background .18s, transform .1s;
 }
-.drop:active, .drop.over {
-  border-color: var(--accent);
-  background: var(--card-2);
-}
-.drop-inner { padding: 46px 24px; text-align: center; }
-.ico {
-  width: 34px; height: 34px;
-  color: var(--accent);
-  margin-bottom: 12px;
-  opacity: .9;
-}
-.tip { margin: 0 0 6px; font-size: 15px; font-weight: 500; }
-.hint { margin: 0; font-size: 12.5px; color: var(--dim-2); line-height: 1.55; }
+.drop:hover { border-color: var(--primary); background: var(--primary-soft); }
+.drop:active { transform: scale(.995); }
+.drop.over { border-color: var(--primary); background: var(--primary-soft); }
+.drop-inner { padding: 44px 24px; text-align: center; }
+.ico { width: 40px; height: 40px; color: var(--primary); margin-bottom: 12px; }
+.tip { margin: 0 0 6px; font-size: 15.5px; font-weight: 650; color: var(--text); }
+.hint { margin: 0; font-size: 12.5px; color: var(--text-3); line-height: 1.6; }
 
-/* ---------- 面板 ---------- */
-.panel { margin-top: 22px; }
-.hidden { display: none !important; }
-
-.opts {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px 18px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-}
+/* ===== 选项 ===== */
+.opts { display: flex; flex-direction: column; gap: 14px; }
 .opt { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-.opt-name { font-size: 13.5px; color: var(--dim); flex-shrink: 0; }
+.opt-name { font-size: 13.5px; color: var(--text-2); flex-shrink: 0; font-weight: 500; }
 
-.seg {
-  display: flex;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 3px;
-  gap: 2px;
-}
+.seg { display: flex; background: #f3f4f6; border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px; }
 .seg-btn {
   border: 0;
   background: transparent;
-  color: var(--dim);
+  color: var(--text-2);
   font-size: 13px;
   font-family: inherit;
-  padding: 6px 14px;
-  border-radius: 7px;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background .15s, color .15s;
+  transition: all .15s;
   white-space: nowrap;
 }
-.seg-btn.active { background: var(--accent); color: #fff; font-weight: 520; }
+.seg-btn.active { background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 2px 6px rgba(255, 125, 0, .3); }
 
-/* ---------- 文件列表 ---------- */
+/* ===== 文件列表 ===== */
 .list { display: flex; flex-direction: column; gap: 9px; }
 
 .item {
   display: flex;
   align-items: center;
   gap: 13px;
-  padding: 13px 16px;
-  background: var(--card);
-  border: 1px solid var(--line);
+  padding: 13px 15px;
+  background: #fafbfc;
+  border: 1px solid var(--border);
   border-radius: 11px;
+  transition: border-color .15s, background .15s;
 }
+.item.done { cursor: pointer; }
+.item.done:hover { border-color: var(--primary); background: var(--primary-soft); }
 .item-main { flex: 1; min-width: 0; }
-.item-name {
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.item-meta {
-  font-size: 12px;
-  color: var(--dim-2);
-  margin-top: 2px;
-  font-variant-numeric: tabular-nums;
-}
+.item-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-meta { font-size: 12px; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .item-state {
   font-size: 12px;
   flex-shrink: 0;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: var(--card-2);
-  color: var(--dim);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: var(--text-2);
   font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
-.item-state.ok { color: var(--ok); background: rgba(62,207,142,.10); }
-.item-state.err { color: var(--err); background: rgba(242,85,90,.10); }
-.item-state.work { color: var(--accent); background: rgba(74,158,255,.10); }
+.item-state.ok { color: var(--ok); background: var(--ok-bg); font-weight: 600; }
+.item-state.err { color: var(--err); background: var(--err-bg); }
+.item-state.work { color: var(--primary-dark); background: var(--primary-soft); }
 
 .item-del {
   border: 0;
   background: transparent;
-  color: var(--dim-2);
+  color: var(--text-3);
   font-size: 19px;
   line-height: 1;
   cursor: pointer;
   padding: 2px 4px;
   flex-shrink: 0;
+  transition: color .15s;
 }
 .item-del:hover { color: var(--err); }
 
-/* 继续添加 */
+/* ===== 继续添加 ===== */
 .addmore {
   display: block;
   width: 100%;
   margin-top: 10px;
-  padding: 13px;
-  background: transparent;
-  border: 1.5px dashed var(--line);
+  padding: 12px;
+  background: #fafbfc;
+  border: 1.5px dashed var(--border);
   border-radius: 11px;
-  color: var(--dim);
+  color: var(--text-2);
   font-family: inherit;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color .18s, color .18s;
+  transition: all .18s;
 }
-.addmore:hover { border-color: var(--accent); color: var(--accent); }
-.addmore:active { background: var(--card-2); }
+.addmore:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
 
-/* ---------- 操作 ---------- */
-.actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+/* ===== 操作按钮 ===== */
+.actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 .btn {
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
   font-family: inherit;
   font-size: 14.5px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 12px 22px;
   border-radius: 10px;
   cursor: pointer;
-  transition: background .15s, opacity .15s, transform .1s;
+  transition: all .15s;
 }
 .btn:active { transform: scale(.98); }
 .btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--primary);
+  border-color: var(--primary);
   color: #fff;
   flex: 1;
   min-width: 150px;
-  font-weight: 560;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(255, 125, 0, .32);
 }
-.btn.primary:disabled { opacity: .5; cursor: default; }
-.btn.ghost { background: transparent; color: var(--dim); }
+.btn.primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.btn.primary:disabled { opacity: .55; cursor: default; box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--text-2); }
+.btn.ghost:hover { background: #f3f4f6; }
 
-/* ---------- 进度 ---------- */
+/* ===== 进度 ===== */
 .prog { margin-top: 16px; }
-.bar {
-  height: 5px;
-  background: var(--card-2);
-  border-radius: 3px;
-  overflow: hidden;
-}
+.bar { height: 6px; background: #f3f4f6; border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
 .bar i {
   display: block;
   height: 100%;
   width: 0;
-  background: var(--accent);
+  background: linear-gradient(90deg, var(--primary), #ffa04d);
   border-radius: 3px;
   transition: width .22s ease;
 }
-.ptxt {
-  margin: 9px 0 0;
-  font-size: 12.5px;
-  color: var(--dim);
-  font-variant-numeric: tabular-nums;
-}
+.ptxt { margin: 9px 0 0; font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 
-/* ---------- 说明 ---------- */
-.notes { margin-top: 42px; padding-top: 26px; border-top: 1px solid var(--line); }
-.notes h2 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 22px 0 8px;
-}
+/* ===== 说明 ===== */
+.notes h2 { font-size: 13.5px; font-weight: 700; margin: 20px 0 8px; color: var(--text); }
 .notes h2:first-child { margin-top: 0; }
-.notes p, .notes li { font-size: 13px; color: var(--dim); line-height: 1.72; margin: 0 0 8px; }
+.notes p, .notes li { font-size: 13px; color: var(--text-2); line-height: 1.75; margin: 0 0 8px; }
 .notes ul { margin: 0; padding-left: 19px; }
 .notes code {
-  background: var(--card-2);
+  background: #f3f4f6;
+  border: 1px solid var(--border);
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--primary-dark);
+}
+.notes b { color: var(--text); }
+
+/* ===== 提示框 ===== */
+.tipbox {
+  background: var(--primary-soft);
+  border: 1px solid #ffd3a8;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: #8a4b00;
+  margin-top: 12px;
+  line-height: 1.65;
 }
 
-@media (max-width: 420px) {
-  .wrap { padding: 0 15px 48px; }
-  .head { padding: 30px 0 20px; }
-  .head h1 { font-size: 23px; }
-  .drop-inner { padding: 36px 18px; }
+.hidden { display: none !important; }
+
+@media (max-width: 480px) {
+  .wrap { padding: 14px 12px 48px; }
+  .hero h1 { font-size: 16px; }
+  .hero .sub { font-size: 11.5px; }
+  .toolbar { padding: 8px 12px; }
+  .toolbar .flow-title { display: none; }
+  .toolbar .flow .fs { font-size: 11px; padding: 2px 8px; }
+  .drop-inner { padding: 34px 18px; }
   .opt { flex-direction: column; align-items: flex-start; gap: 8px; }
   .seg { width: 100%; }
   .seg-btn { flex: 1; text-align: center; padding: 7px 8px; }
+  .sec-head, .sec-body { padding-left: 14px; padding-right: 14px; }
 }
 
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="head">
-    <h1>记录仪视频修复</h1>
-    <p class="sub">海康 / 小鹏记录仪的「伪装 mp4」→ 标准 MP4。无损重封装，画质一帧不动。</p>
-  </header>
 
+<!-- ===== 固定头部 ===== -->
+<div class="sticky-head">
+  <div class="hero">
+    <span class="logo">🎥</span><h1>记录仪视频修复</h1>
+    <div class="sub">海康 / 小鹏记录仪「伪装 mp4」→ 标准 MP4 · 无损重封装，画质一帧不动</div>
+    <div class="tags">
+      <span class="tag">iPhone</span>
+      <span class="tag">iPad</span>
+      <span class="tag">Mac</span>
+      <span class="tag">Windows</span>
+      <span class="tag">本地处理</span>
+    </div>
+  </div>
+  <div class="toolbar">
+    <span class="flow-title">📋 速览流程</span>
+    <div class="flow">
+      <span class="fs"><b>1</b> 选视频</span><span class="ar">→</span>
+      <span class="fs"><b>2</b> 选输出方式</span><span class="ar">→</span>
+      <span class="fs"><b>3</b> 开始修复</span><span class="ar">→</span>
+      <span class="fs"><b>4</b> 下载结果</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ===== 上传 ===== -->
   <section id="drop" class="drop">
     <div class="drop-inner">
       <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -278,55 +343,73 @@ html, body {
         <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/>
       </svg>
       <p class="tip">点这里选择视频，或把文件拖进来</p>
-      <p class="hint">支持一次选多个文件。文件不会离开你的设备，全程在浏览器本地处理。</p>
+      <p class="hint">支持一次选多个文件 · 文件不会离开你的设备，全程在浏览器本地处理</p>
     </div>
   </section>
   <input id="file" type="file" multiple accept="video/*,.mp4,.MP4,.264,.ts,.ps" hidden>
 
-  <section id="panel" class="panel hidden">
-    <div class="opts hidden" id="opts">
-      <label class="opt">
-        <span class="opt-name">输出方式</span>
-        <div class="seg" id="modeSeg">
-          <button class="seg-btn active" data-mode="single">分开输出</button>
-          <button class="seg-btn" data-mode="merge">合并成一条</button>
+  <!-- ===== 主面板 ===== -->
+  <section id="panel" class="hidden">
+    <div class="section hidden" id="opts">
+      <div class="sec-head"><h2>⚙️ 输出设置</h2></div>
+      <div class="sec-body">
+        <div class="opts">
+          <label class="opt">
+            <span class="opt-name">输出方式</span>
+            <div class="seg" id="modeSeg">
+              <button class="seg-btn active" data-mode="single">分开输出</button>
+              <button class="seg-btn" data-mode="merge">合并成一条</button>
+            </div>
+          </label>
+          <label class="opt hidden" id="mergeOpt">
+            <span class="opt-name">合并顺序</span>
+            <div class="seg" id="orderSeg">
+              <button class="seg-btn active" data-order="time">按录制时间</button>
+              <button class="seg-btn" data-order="name">按文件名</button>
+            </div>
+          </label>
         </div>
-      </label>
-      <label class="opt hidden" id="mergeOpt">
-        <span class="opt-name">合并顺序</span>
-        <div class="seg" id="orderSeg">
-          <button class="seg-btn active" data-order="time">按录制时间</button>
-          <button class="seg-btn" data-order="name">按文件名</button>
-        </div>
-      </label>
+      </div>
     </div>
 
-    <div class="list" id="list"></div>
-
-    <button id="addmore" class="addmore">+ 继续添加视频</button>
-
-    <div class="actions">
-      <button id="run" class="btn primary">开始修复</button>
-      <button id="dlall" class="btn hidden">全部下载</button>
-      <button id="reset" class="btn ghost">清空</button>
-    </div>
-    <div class="prog hidden" id="prog">
-      <div class="bar"><i id="bar"></i></div>
-      <p class="ptxt" id="ptxt"></p>
+    <div class="section">
+      <div class="sec-head"><h2>📁 待处理文件</h2></div>
+      <div class="sec-body">
+        <div class="list" id="list"></div>
+        <button id="addmore" class="addmore">+ 继续添加视频</button>
+        <div class="actions">
+          <button id="run" class="btn primary">开始修复</button>
+          <button id="dlall" class="btn hidden">全部下载</button>
+          <button id="reset" class="btn ghost">清空</button>
+        </div>
+        <div class="prog hidden" id="prog">
+          <div class="bar"><i id="bar"></i></div>
+          <p class="ptxt" id="ptxt"></p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="notes">
-    <h2>为什么要修</h2>
-    <p>这类记录仪的文件扩展名写着 <code>.mp4</code>，里面其实不是 MP4，而是 <b>MPEG-PS</b> 流，前面还垫了 256KB 的私有头。播放器按 MP4 规范去找 <code>ftyp</code> 找不到，就放弃；剪辑软件按文件长度硬算时长，于是 2 分钟显示成 2 小时，尾部还会绿屏。</p>
-    <p>修法是<b>把外壳换掉</b>：剥掉私有头，把里面的 H.265 码流重新包进标准 MP4 容器。不解码、不重编码，所以画质和原片完全一致。</p>
-    <h2>支持情况</h2>
-    <ul>
-      <li>视频编码 HEVC (H.265) / 音频 AAC 的记录仪文件</li>
-      <li>iPhone / iPad Safari、Mac、Windows、Android 均可使用</li>
-      <li>大文件（数百 MB 到数 GB）建议用电脑处理，手机内存有限</li>
-    </ul>
+  <!-- ===== 说明 ===== -->
+  <section class="section notes">
+    <div class="sec-head"><h2>💡 为什么要修</h2></div>
+    <div class="sec-body">
+      <p>这类记录仪的文件扩展名写着 <code>.mp4</code>，里面其实不是 MP4，而是 <b>MPEG-PS</b> 流，前面还垫了 256KB 的私有头。播放器按 MP4 规范去找 <code>ftyp</code> 找不到，就放弃；剪辑软件按文件长度硬算时长，于是 2 分钟显示成 2 小时，尾部还会绿屏。</p>
+      <p>修法是<b>把外壳换掉</b>：剥掉私有头，把里面的 H.265 码流重新包进标准 MP4 容器。不解码、不重编码，所以画质和原片完全一致。</p>
+
+      <h2>✅ 支持情况</h2>
+      <ul>
+        <li>视频编码 HEVC (H.265) / 音频 AAC 的记录仪文件</li>
+        <li>iPhone / iPad Safari、Mac、Windows、Android 均可使用</li>
+        <li>大文件（数百 MB 到数 GB）建议用电脑处理，手机内存有限</li>
+      </ul>
+
+      <div class="tipbox">
+        💡 <b>关于画质</b>：本工具只做字节重排，不解码画面。输出的每一帧与原始码流比特级完全一致，可自行用 ffmpeg 逐帧校验。
+      </div>
+    </div>
   </section>
+
 </div>
 
 <script type="module">
