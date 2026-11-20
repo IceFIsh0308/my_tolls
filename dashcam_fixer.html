@@ -434,6 +434,33 @@ body {
   border-bottom: 2px solid var(--primary);
   pointer-events: none;
 }
+/* 播放头：显示当前播放位置，可直接拖拽到任意位置 */
+.ed-playhead {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: #1f2937;
+  border-radius: 2px;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .55);
+  z-index: 3;
+}
+.ed-playhead::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #1f2937;
+}
+/* 拖动播放头时的活动区域提示 */
+.ed-track.seeking { cursor: ew-resize; }
+
 .ed-handle {
   position: absolute;
   top: -3px;
@@ -666,6 +693,7 @@ body {
           <span class="ed-time" id="edstart">0.0s</span>
           <div class="ed-track" id="edtrack">
             <div class="ed-range" id="edrange"></div>
+            <div class="ed-playhead" id="edplayhead"></div>
             <div class="ed-handle ed-h-start" id="edhstart" data-role="start"></div>
             <div class="ed-handle ed-h-end" id="edhend" data-role="end"></div>
           </div>
@@ -2428,6 +2456,7 @@ function openEditor(it) {
 
   edSetVideo(it.result.blob);
   edResetRange();
+  syncPlayhead(0);
   syncEdUI();
   ed.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -2442,6 +2471,8 @@ function edSetVideo(blob) {
   v.onended = null;
   v.ontimeupdate = () => {
     if (!v.duration || !isFinite(v.duration)) return;
+    // 播放头跟着走
+    syncPlayhead(v.currentTime);
     if (v.currentTime > edEnd + 0.05 || v.currentTime < edStart - 0.05) {
       // 用户拖动了系统进度条跑到选区外 → 拉回来
       if (!v.paused) v.currentTime = edStart;
@@ -2453,6 +2484,15 @@ function edResetRange() {
   edStart = 0;
   edEnd = edDuration;
   syncRangeUI();
+}
+
+/** 播放头位置（秒）画到轨道上 */
+function syncPlayhead(sec) {
+  const track = $('edtrack');
+  const head = $('edplayhead');
+  const w = track.clientWidth || 1;
+  const ratio = edDuration ? Math.max(0, Math.min(1, sec / edDuration)) : 0;
+  head.style.left = ratio * w + 'px';
 }
 
 /** 把 edStart/edEnd 画到时间轴上 */
@@ -2519,8 +2559,10 @@ function fmtSec(s) {
   const onDown = (e) => {
     if (!edDuration) return;
     const role = e.target.dataset?.role;
-    dragging = role || pick(e.clientX);
+    // 点/拖在把手上 → 调选区；点在轨道空白处 → 拖播放头（预览位置）
+    dragging = role || 'seek';
     track.setPointerCapture?.(e.pointerId);
+    track.classList.toggle('seeking', dragging === 'seek');
     onMove(e);
     e.preventDefault();
   };
@@ -2528,6 +2570,16 @@ function fmtSec(s) {
   const onMove = (e) => {
     if (!dragging) return;
     const s = posToSec(e.clientX);
+
+    if (dragging === 'seek') {
+      // 播放头：只在选区内移动，避免拖到片段外看无关内容
+      const v = $('edvideo');
+      const target = Math.max(edStart, Math.min(s, edEnd));
+      if (v && isFinite(v.duration)) v.currentTime = target;
+      syncPlayhead(target);
+      return;
+    }
+
     if (dragging === 'start') {
       edStart = Math.max(0, Math.min(s, edEnd - 0.2));
     } else {
@@ -2538,9 +2590,13 @@ function fmtSec(s) {
     // 预览跟着停到拖动的那个把手上，方便看内容
     const v = $('edvideo');
     if (v && isFinite(v.duration)) v.currentTime = dragging === 'start' ? edStart : edEnd;
+    syncPlayhead(dragging === 'start' ? edStart : edEnd);
   };
 
-  const onUp = () => { dragging = null; };
+  const onUp = () => {
+    dragging = null;
+    track.classList.remove('seeking');
+  };
 
   track.addEventListener('pointerdown', onDown);
   track.addEventListener('pointermove', onMove);
@@ -2599,6 +2655,7 @@ $('edapply').addEventListener('click', async () => {
 $('edrestore').addEventListener('click', () => {
   if (!edItem) return;
   edResetRange();
+  syncPlayhead(0);
   syncEdUI();
   const v = $('edvideo');
   if (v) v.currentTime = 0;
