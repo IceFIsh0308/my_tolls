@@ -201,6 +201,24 @@ body {
 }
 .item-del:hover { color: var(--err); }
 
+/* 单条保存按钮 */
+.item-save {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background .15s, transform .1s;
+}
+.item-save:active { transform: scale(.96); }
+.item-save:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
 /* ===== 继续添加 ===== */
 .addmore {
   display: block;
@@ -324,6 +342,28 @@ body {
 
 .hidden { display: none !important; }
 
+/* ===== Toast ===== */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translate(-50%, 20px);
+  max-width: min(88vw, 420px);
+  background: rgba(24, 25, 28, .94);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 11px 18px;
+  border-radius: 10px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s, transform .22s;
+  z-index: 999;
+  backdrop-filter: blur(8px);
+}
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
 @media (max-width: 480px) {
   .wrap { padding: 14px 12px 48px; }
   .hero h1 { font-size: 16px; }
@@ -420,7 +460,7 @@ body {
         </div>
         <div class="actions">
           <button id="run" class="btn primary">开始修复</button>
-          <button id="dlall" class="btn hidden">全部下载</button>
+          <button id="dlall" class="btn hidden">全部保存</button>
           <button id="reset" class="btn ghost">清空</button>
         </div>
         <div class="prog hidden" id="prog">
@@ -448,6 +488,10 @@ body {
       <div class="tipbox">
         💡 <b>关于画质</b>：本工具只做字节重排，不解码画面。输出的每一帧与原始码流比特级完全一致，可自行用 ffmpeg 逐帧校验。
       </div>
+
+      <h2>📱 手机上怎么存到相册</h2>
+      <p>浏览器没有「直接写入相册」的权限，这是系统限制。所以本工具在手机上点保存后会弹出<b>系统分享面板</b>，在面板里选 <b>「存储视频」</b>（iOS）或 <b>「保存到相册」</b>，就进相册了，只要一步。</p>
+      <p>电脑上点保存就是普通下载，落到「下载」文件夹。</p>
     </div>
   </section>
 
@@ -1710,10 +1754,17 @@ function render() {
         <div class="item-meta">${meta.join(' · ')}</div>
       </div>
       <span class="item-state ${stateCls}"></span>
+      ${it.status === 'done' ? `<button class="item-save" title="${isTouch ? '保存到相册' : '下载'}">${isTouch ? '存相册' : '下载'}</button>` : ''}
       ${!running && it.status !== 'done' ? '<button class="item-del" title="移除">×</button>' : ''}
     `;
     el.querySelector('.item-name').textContent = it.file.name;
     el.querySelector('.item-state').textContent = stateText;
+    const save = el.querySelector('.item-save');
+    if (save) save.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const r = await saveFile(it.result.blob, it.result.name);
+      afterSave(r, it.result.name);
+    });
     const del = el.querySelector('.item-del');
     if (del) del.addEventListener('click', () => {
       items = items.filter((x) => x.id !== it.id);
@@ -1879,38 +1930,116 @@ function outputName(orig, priv, analyzed) {
 }
 
 // ---------- 下载 ----------
-function download(blob, name) {
+/** 判断是否移动端（iOS 分享面板是存相册的唯一顺畅路径） */
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = /Android/i.test(navigator.userAgent);
+const isTouch = isIOS || isAndroid;
+
+/**
+ * 保存文件到设备。
+ *
+ * 浏览器没有直接写相册的 API（这是平台的硬限制，不是没做）：
+ *   - iOS Safari 唯一顺畅路径是 Web Share API → 分享面板里选「存储视频 / 保存到照片」
+ *   - 安卓 Chrome 同样是分享面板，或者落进 Downloads
+ *   - 桌面浏览器直接下载到「下载」文件夹
+ *
+ * @returns {'shared'|'downloaded'|'aborted'|'failed'}
+ */
+async function saveFile(blob, name) {
   window.__lastBlob = blob;   // 便于自动化验证取回产物
   window.__lastName = name;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+  // 优先走分享面板（iPhone 上这就是「存相册」的入口）
+  if (isTouch && navigator.canShare) {
+    try {
+      const file = new File([blob], name, { type: 'video/mp4' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return 'shared';
+      }
+    } catch (err) {
+      // 用户点了取消不算错
+      if (err?.name === 'AbortError') return 'aborted';
+      console.warn('分享失败，回退到下载', err);
+    }
+  }
+
+  // 回退：普通下载
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return 'downloaded';
+  } catch (err) {
+    console.error('下载失败', err);
+    return 'failed';
+  }
 }
 
-// 点击已完成条目即可下载
-listEl.addEventListener('click', (e) => {
+/** 兼容旧调用名 */
+const download = saveFile;
+
+// 调试/自动化钩子
+window.__saveFile = saveFile;
+window.__isTouch = () => isTouch;
+
+/** 保存之后给用户一句反馈 */
+function afterSave(result, name) {
+  if (result === 'aborted' || result === 'failed') return;
+  showToast(result === 'shared'
+    ? '已打开分享面板 — 选「存储视频」即可存入相册'
+    : (isIOS ? '已开始下载，可在「文件」App 里查看' : '已保存到下载文件夹'));
+}
+
+/** 轻量 toast */
+let toastTimer = null;
+function showToast(text) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// 点击已完成条目即可保存
+listEl.addEventListener('click', async (e) => {
   const el = e.target.closest('.item');
   if (!el) return;
   const idx = [...listEl.children].indexOf(el);
   const it = items[idx];
-  if (it?.status === 'done' && it.result && !e.target.closest('.item-del')) {
-    download(it.result.blob, it.result.name);
+  if (it?.status === 'done' && it.result
+      && !e.target.closest('.item-del') && !e.target.closest('.item-save')) {
+    const r = await saveFile(it.result.blob, it.result.name);
+    afterSave(r, it.result.name);
   }
 });
 
-dlAllBtn.addEventListener('click', () => {
+dlAllBtn.addEventListener('click', async () => {
   const done = items.filter((i) => i.status === 'done' && i.result);
   const shared = done.filter((i) => i.result.shared);
   if (shared.length) {
-    download(shared[0].result.blob, shared[0].result.name);
+    const r = await saveFile(shared[0].result.blob, shared[0].result.name);
+    afterSave(r, shared[0].result.name);
     return;
   }
-  done.forEach((it, k) => setTimeout(() => download(it.result.blob, it.result.name), k * 400));
+  // 多条：iPhone 上分享面板一次只能分享一个文件，需要逐个触发
+  for (let k = 0; k < done.length; k++) {
+    setTimeout(async () => {
+      const r = await saveFile(done[k].result.blob, done[k].result.name);
+      if (k === 0) afterSave(r, done[k].result.name);
+    }, k * 600);
+  }
 });
 
 </script>
